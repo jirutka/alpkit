@@ -1,0 +1,24 @@
+[package]
+name = "apk-inspect"
+version = "0.1.0"
+authors = ["Jakub Jirutka <jakub@jirutka.cz>"]
+edition = "2021"
+description = "A CLI tool for reading metadata from the APKv2 package format and APKBUILD."
+repository = "https://github.com/jirutka/alpkit"
+license = "MIT"
+keywords = ["cli", "alpine", "alpine-linux", "apk", "apk-tools"]
+
+[features]
+default = ["flate2-rust"]
+# Choose the flate2 backend. Note that flate2-rust and flate2-zlib
+# (or flate2-zlib-ng) can be enabled at the same time - in that case,
+# the latter is used.
+flate2-rust = ["alpkit/flate2-rust"]
+flate2-zlib = ["alpkit/flate2-zlib"]
+flate2-zlib-ng = ["alpkit/flate2-zlib-ng"]
+
+[dependencies]
+alpkit = { path = "../alpkit", default-features = false, features = ["base64", "shell-timeout"] }
+argp = "0.1.0"
+serde = "1.0"
+serde_json = "1.0"

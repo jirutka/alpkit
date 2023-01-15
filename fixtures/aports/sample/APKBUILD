@@ -1,0 +1,57 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=sample
+pkgver=1.2.3
+pkgrel=2
+pkgdesc="A sample aport for testing"
+url="https://example.org/sample"
+# riscv64,s390x: fails to build
+arch="all !riscv64 !s390x"
+license="ISC and BSD-2-Clause and BSD-3-Clause"
+depends="
+	ruby>=3.0
+	!sample-legacy
+	"
+makedepends="
+	openssl-dev>3
+	zlib-dev
+	"
+checkdepends="ruby-rspec"
+install="$pkgname.post-install $pkgname.post-upgrade"
+triggers="$pkgname.trigger=/usr/share/sample/*"
+replaces="sample2"
+provides="sample2=$pkgver-r$pkgrel"
+provider_priority=100
+subpackages="
+	$pkgname-doc
+	$pkgname-dev
+	"
+source="
+	https://example.org/sample/sample-$pkgver.tar.gz
+	sample.initd
+	sample.confd
+	"
+options="!check"
+
+# secfixes:
+#   1.2.3-r2:
+#     - CVE-2022-12347
+#     - CVE-2022-12346
+#   1.2.0-r0:
+#     - CVE-2021-12345
+
+build() {
+	make
+}
+
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+54286070812a47b629f68757046d3c9a1bdd2b5d1c3b84a5c8e4cb92f1331afa745443f7238175835d8cfbe5b8dd442e00c75c3a5b5b8f8efd8d2ec8f636dad4  sample-1.2.3.tar.gz
+b512bcb8bae11853a3006e2122d7e652806d4bf2234638d8809fd823375b5b0bd590f7d6a90412baffcc3b7b6a0f197a10986728a70f24fe628f91bfb651d266  sample.initd
+6eda39920cccb1238b104bb90ac4be2c32883897c72363560d8d39345819cdeff535680e78396052b2b8f981e169ad9b3c30da724def80a1501785d82ce7fa25  sample.confd
+"

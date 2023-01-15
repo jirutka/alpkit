@@ -1,0 +1,42 @@
+[package]
+name = "alpkit"
+version = "0.1.0"
+authors = ["Jakub Jirutka <jakub@jirutka.cz>"]
+edition = "2021"
+description = "A library for reading metadata from the APKv2 package format and APKBUILD."
+repository = "https://github.com/jirutka/alpkit"
+license = "MIT"
+keywords = ["alpine", "alpine-linux", "apk", "apk-tools"]
+
+[features]
+# Encode/decode `xattrs` in JSON with base64. If disabled, `xattr` values will
+# be empty.
+base64 = ["dep:base64"]
+# Add support for setting timeout for the APKBUILD interpretation.
+shell-timeout = ["dep:process_control"]
+# Choose the flate2 backend. Note that flate2-rust and flate2-zlib
+# (or flate2-zlib-ng) can be enabled at the same time - in that case,
+# the latter is used.
+flate2-rust = ["flate2/rust_backend"]
+flate2-zlib = ["flate2/zlib"]
+flate2-zlib-ng = ["flate2/zlib-ng"]
+
+[dependencies]
+base64 = { version = "0.13", optional = true }
+bitmask-enum = "2.1"
+cfg-iif = "0.2"
+field_names = "0.2"
+flate2 = { version = "1.0", default-features = false }
+process_control = { version = "4.0", optional = true }
+serde = { version = "1.0", features = ["derive"] }
+tar = { version = "0.4", default-features = false }
+thiserror = "1.0"
+
+[dev-dependencies]
+assert2 = "0.3.6"
+indoc = "1.0"
+serde_json = "1.0"
+
+[package.metadata.docs.rs]
+features = ["base64", "shell-timeout"]
+rustdoc-args = ["--cfg", "docsrs"]

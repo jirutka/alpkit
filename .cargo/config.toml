@@ -1,0 +1,26 @@
+# Link with system zlib-ng on Alpine Linux.
+# NOTE: cfg() doesn't work here (see my comment in rust-lang/cargo#8170)
+
+[target.aarch64-alpine-linux-musl]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.armv6-alpine-linux-musleabihf]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.armv7-alpine-linux-musleabihf]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.i586-alpine-linux-musl]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.powerpc64le-alpine-linux-musl]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.riscv64-alpine-linux-musl]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.s390x-alpine-linux-musl]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
+
+[target.x86_64-alpine-linux-musl]
+z-ng = { rustc-link-lib = ["z-ng"], rustc-cfg = ["zng"] }
