@@ -1,0 +1,113 @@
+name: Release
+on:
+  push:
+    tags:
+      - v[0-9]*
+
+jobs:
+  build-bins:
+    name: Build for ${{ matrix.target }}
+    strategy:
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-musl }
+          - { target: x86_64-apple-darwin, os: macos-latest }
+          - { target: aarch64-unknown-linux-musl }
+          - { target: armv7-unknown-linux-musleabihf }
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    env:
+      BIN_NAME: apk-inspect
+      CARGO: ${{ startsWith(matrix.target, 'x86_64') && 'cargo' || 'cross' }}
+      TARGET_DIR: target/${{ matrix.target }}/release
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust for ${{ matrix.target }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Set up caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}-stable
+
+      - name: Install cross tool
+        if: ${{ !startsWith(matrix.target, 'x86_64') }}
+        run: cargo install cross
+
+      - name: Build
+        run: $CARGO build --bin $BIN_NAME --locked --release --target ${{ matrix.target }}
+
+      - name: Inspect binary
+        run: |
+          ls -l $BIN_NAME
+          file $BIN_NAME
+        working-directory: ${{ env.TARGET_DIR }}
+
+      - if: startsWith(matrix.target, 'x86_64')
+        run: ./$BIN_NAME --version
+        working-directory: ${{ env.TARGET_DIR }}
+
+      - name: Rename binary
+        run: |
+          mkdir -p dist
+          mv $TARGET_DIR/$BIN_NAME dist/$BIN_NAME.$(echo "${{ matrix.target }}" | cut -d- -f1,3)
+
+      - name: Upload binary to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: dist/*
+          if-no-files-found: error
+
+  publish-bins:
+    name: Publish binaries to Releases
+    needs: build-bins
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download binaries from artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate checksums.txt
+        run: shasum -a 256 * | tee checksums.txt
+        working-directory: binaries
+
+      - name: Upload binaries to Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: binaries/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crates:
+    name: Publish libs to crates.io
+    needs: build-bins
+    runs-on: ubuntu-latest
+    env:
+      CRATE_NAME: alpkit
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install asciidoctor and pandoc
+        run: sudo apt-get install asciidoctor pandoc
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Convert README to Markdown
+        run: |
+          printf '# Alpkit\n\n' > $CRATE_NAME/README.md
+          asciidoctor -b docbook -a env-crates-io -a crate-$CRATE_NAME -o - README.adoc \
+              | pandoc -f docbook -t gfm --wrap=preserve --shift-heading-level-by=1 \
+              | tee -a $CRATE_NAME/README.md
+
+      - name: Publish to crates.io
+        run: cargo publish -p $CRATE_NAME --locked --verbose
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
