@@ -1,6 +1,8 @@
 = Alpkit
 :proj-name: alpkit
 :gh-name: jirutka/{proj-name}
+:version: 0.0.0
+:releases-uri: https://github.com/{gh-name}/releases/download/v{version}
 
 ifdef::env-github[]
 image:https://img.shields.io/crates/v/{proj-name}.svg[Version on crates.io, link=https://crates.io/crates/{proj-name}]
@@ -9,6 +11,57 @@ image:https://github.com/{gh-name}/workflows/CI/badge.svg[CI Workflow, link=http
 endif::env-github[]
 
 This project provides a Rust library and CLI tool for reading the APK(v2) package format and `APKBUILD`.
+
+
+ifndef::env-crates-io[]
+== apk-inspect
+:bin-name: apk-inspect
+
+{bin-name} is a CLI tool built on the alpkit library for extracting metadata from Alpine’s APKv2 packages and APKBUILD files to JSON.
+
+
+=== Installation
+
+==== Using Pre-Built Binary
+
+🐧 *Linux*:
+{releases-uri}/{bin-name}.x86_64-linux[[x86_64\]]
+{releases-uri}/{bin-name}.aarch64-linux[[aarch64\]]
+{releases-uri}/{bin-name}.armv7-linux[[armv7\]] +
+ *macOS*:
+{releases-uri}/{bin-name}.x86_64-darwin[[x86_64\]]
+
+If your package manager doesn’t provide {bin-name}, you can use a pre-built binary.
+
+. Download and verify {proj-name} binary for your OS and CPU architecture (pick the right link from the list above), for example:
++
+[source, sh, subs="+attributes"]
+----
+curl -sSLO {releases-uri}/{bin-name}.x86_64-linux
+curl -sSL {releases-uri}/checksums.txt | sha256sum -c --ignore-missing
+----
+
+. Install `{bin-name}` somewhere on your `PATH`, e.g. `/usr/local/bin`:
++
+[source, sh, subs="+attributes"]
+install -D -m755 {bin-name}.* /usr/local/bin/{bin-name}
+
+All Linux binaries are statically linked with http://www.musl-libc.org/[musl libc], so they work on every Linux system (distro) regardless of used libc.
+
+
+==== From Source Tarball
+
+[source, sh, subs="+attributes"]
+----
+wget https://github.com/{gh-name}/archive/v{version}/{proj-name}-{version}.tar.gz
+tar -xzf {proj-name}-{version}.tar.gz
+cd {proj-name}-{version}
+
+cargo build -p {bin-name} --release --locked
+install -D -m755 target/release/{bin-name} -t /usr/local/bin/
+----
+
+endif::env-crates-io[]
 
 
 == License
