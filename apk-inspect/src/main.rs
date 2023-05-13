@@ -89,7 +89,7 @@ enum Action {
 }
 
 fn main() {
-    let args: AppOpts = argp::from_env();
+    let args: AppOpts = argp::parse_args_or_exit(&Default::default());
 
     if args.version {
         println!("{} {}", PROG_NAME, PROG_VERSION);
