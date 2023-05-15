@@ -9,6 +9,7 @@ license = "MIT"
 keywords = ["alpine", "alpine-linux", "apk", "apk-tools"]
 
 [features]
+default = ["flate2-rust"]
 # Encode/decode `xattrs` in JSON with base64. If disabled, `xattr` values will
 # be empty.
 base64 = ["dep:base64"]
