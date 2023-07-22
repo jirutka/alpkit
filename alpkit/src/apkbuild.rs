@@ -363,7 +363,9 @@ impl ApkbuildReader {
             })
             .envs(self.env.iter())
             .env("APKBUILD", filename)
-            .current_dir(startdir)
+            .tap_mut_if(!startdir.as_os_str().is_empty(), |cmd| {
+                cmd.current_dir(startdir);
+            })
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
