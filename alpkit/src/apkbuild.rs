@@ -333,8 +333,6 @@ impl ApkbuildReader {
                 acc
             });
 
-        dbg!(&parsed);
-
         let mut apkbuild: Apkbuild = serde_key_value::from_ordered_pairs(parsed)?;
 
         if let Some(source) = source {
