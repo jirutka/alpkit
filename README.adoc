@@ -1,7 +1,7 @@
 = Alpkit
 :proj-name: alpkit
 :gh-name: jirutka/{proj-name}
-:version: 0.1.0-pre.1
+:version: 0.1.0-pre.2
 :releases-uri: https://github.com/{gh-name}/releases/download/v{version}
 
 ifdef::env-github[]
