@@ -1,10 +1,10 @@
+use serde::{self, Deserialize, Serialize};
+use thiserror::Error;
+
 use crate::dependency::Dependency;
 use crate::internal::key_value_vec_map;
 use crate::internal::macros::bail;
 use crate::internal::serde_key_value;
-
-use serde::{self, Deserialize, Serialize};
-use thiserror::Error;
 
 ////////////////////////////////////////////////////////////////////////////////
 
