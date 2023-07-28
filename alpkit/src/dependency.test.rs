@@ -78,3 +78,29 @@ fn dependency_key_value() {
         assert!(Dependency::from_key_value(kv.0, kv.1).unwrap() == constraint);
     }
 }
+
+#[test]
+#[cfg(feature = "validate")]
+fn dependency_validate_valid() {
+    for constraint in vec![
+        Dependency::new("foo-doc", None),
+        Dependency::new("foo-doc", Some(Constraint::new(Op::Equal, "1.2.3"))),
+        Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1.2_rc1"))),
+        Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "2.5_beta_pre2-r123"))),
+    ] {
+        assert!(constraint.validate(&()).is_ok());
+    }
+}
+
+#[test]
+#[cfg(feature = "validate")]
+fn dependency_validate_invalid() {
+    for constraint in vec![
+        Dependency::new("!foo", None),
+        Dependency::new("foo doc", Some(Constraint::new(Op::Equal, "1.2.3"))),
+        Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1_2_3"))),
+        Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "a-r0"))),
+    ] {
+        assert!(constraint.validate(&()).is_err());
+    }
+}

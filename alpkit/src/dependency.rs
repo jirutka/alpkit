@@ -2,10 +2,15 @@ use std::fmt::{self, Write};
 use std::str::FromStr;
 
 use bitmask_enum::bitmask;
+#[cfg(feature = "validate")]
+use garde::Validate;
+use mass_cfg_attr::mass_cfg_attr;
 use serde::de::{self, Deserialize};
 use thiserror::Error;
 
 use crate::internal::{key_value_vec_map::KeyValueLike, macros::bail};
+#[cfg(feature = "validate")]
+use crate::internal::regex;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -15,20 +20,26 @@ pub struct ConstraintParseError(String);
 
 /// A dependency (or conflict) on a package or provider.
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
 pub struct Dependency {
     /// Package or provider name.
+    #[garde(pattern(regex::PROVIDER))]
     pub name: String,
 
     /// Version constraint.
+    #[garde(dive)]
     pub constraint: Option<Constraint>,
 
     /// If true, then this is an “anti-dependency” (conflict).
+    #[garde(skip)]
     pub conflict: bool,
 
     /// Tag of a repository to which this dependency is pinned.
     ///
     /// Please note that this is never used in PKGINFO nor APKBUILD and it's
-    /// ignored in [KeyValueLike].
+    /// ignored in [`KeyValueLike`].
+    #[garde(ascii, pattern(regex::REPO_PIN))]
     pub repo_pin: Option<String>,
 }
 
@@ -143,8 +154,13 @@ impl<'de> Deserialize<'de> for Dependency {
 
 /// A version constraint.
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
 pub struct Constraint {
+    #[garde(skip)]
     pub op: Op,
+
+    #[garde(pattern(regex::PKGVER_MAYBE_REL))]
     pub version: String,
 }
 

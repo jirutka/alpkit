@@ -62,8 +62,44 @@ fn pkginfo_parse() {
         depend = so:libc.musl-x86_64.so.1
         datahash = 4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b
     "};
-
     assert!(PkgInfo::parse(input).unwrap() == sample_pkginfo());
+}
+
+#[test]
+#[cfg(feature = "validate")]
+fn pkginfo_validate_valid() {
+    assert!(sample_pkginfo().validate(&()).is_ok());
+}
+
+#[test]
+#[cfg(feature = "validate")]
+fn pkginfo_validate_invalid() {
+    let pkginfo = PkgInfo {
+        pkgname: S!("samp/le"),
+        pkgver: S!("1-2_3-r2"),
+        pkgdesc: S!("A sample aport\nfor testing"),
+        url: S!("ftp://example.org/sample"),
+        arch: S!("AArch64"),
+        origin: S!("sampl*"),
+        commit: Some(S!("123")),
+        maintainer: Some(S!("Not an em@il")),
+        license: S!("multi\nline"),
+        triggers: vec![S!("bin/*"), S!("/usr bin/*")],
+        depends: vec![
+            dependency("ruby#>=3.0"),
+            dependency("so:libc.musl-x86_64.$o.1"),
+        ],
+        conflicts: vec![dependency("sample-legacy!")],
+        install_if: vec![dependency("sample=1.2.3-alpha"), dependency("-")],
+        provides: vec![dependency("cmd:sample*=1.2.3-r2")],
+        provider_priority: Some(10),
+        packager: S!("Not an em@il"),
+        datahash: S!("123"),
+        ..Default::default()
+    };
+
+    assert_let!(Err(e) = pkginfo.validate(&()));
+    assert!(e.flatten().len() == 18);
 }
 
 #[test]

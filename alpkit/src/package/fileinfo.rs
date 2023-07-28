@@ -3,16 +3,24 @@ use std::error;
 use std::io::{self, Read};
 use std::path::PathBuf;
 
+#[cfg(feature = "validate")]
+use garde::Validate;
+use mass_cfg_attr::mass_cfg_attr;
 use serde::{de, Deserialize, Serialize};
 
 use crate::internal::key_value_vec_map::{self, KeyValueLike};
 use crate::internal::macros::bail;
+#[cfg(feature = "validate")]
+use crate::internal::regex;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// This struct represents a file (in general sense, so also a directory) in
 /// an APK package archive.
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
+#[garde(allow_unvalidated)]
 pub struct FileInfo {
     /// An absolute path of the file.
     pub path: PathBuf,
@@ -27,10 +35,12 @@ pub struct FileInfo {
     pub link_target: Option<PathBuf>,
 
     /// The name of the system user who owns the file.
+    #[garde(pattern(regex::USER_NAME))]
     #[serde(default = "root", skip_serializing_if = "is_root")]
     pub uname: String,
 
     /// The name of the sytem group that owns the file.
+    #[garde(pattern(regex::USER_NAME))]
     #[serde(default = "root", skip_serializing_if = "is_root")]
     pub gname: String,
 
@@ -51,6 +61,7 @@ pub struct FileInfo {
     pub device: u64,
 
     /// The SHA-1 checksum of the file.
+    #[garde(pattern(regex::SHA1))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub digest: Option<String>,
 

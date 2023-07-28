@@ -68,6 +68,67 @@ fn sample_apkbuild() -> Apkbuild {
 }
 
 #[test]
+#[cfg(feature = "validate")]
+fn apkbuild_validate_valid() {
+    assert!(sample_apkbuild().validate(&()).is_ok())
+}
+
+#[test]
+#[cfg(feature = "validate")]
+fn apkbuild_validate_invalid() {
+    let apkbuild = Apkbuild {
+        maintainer: Some(S!("Invalid em@il")),
+        contributors: vec![
+            S!("invalid@form.at"),
+        ],
+        pkgname: S!("samp/le"),
+        pkgver: S!("1.2.3+alpha"),
+        pkgdesc: S!("A sample aport\nfor testing"),
+        url: S!("https://example.org/sample space"),
+        arch: vec![
+            S!("all spaces"),
+            S!("!riscv64"),
+            S!("s390x")
+        ],
+        depends: vec![
+            dependency("ruby#>=3.0"),
+            dependency("!!sample-legacy"),
+        ],
+        makedepends: vec![
+            dependency("openssl!dev>3"),
+            dependency("zlib-dev"),
+        ],
+        checkdepends: vec![
+            dependency("ruby&rspec"),
+        ],
+        provides: vec![
+            dependency("sample2=1.2.3-rrr2"),
+        ],
+        pcprefix: Some(S!("wrong prefix")),
+        replaces: vec![
+            dependency("sample2?"),
+        ],
+        subpackages: vec![
+            S!("sample doc"),
+            S!("sample^dev"),
+        ],
+        source: vec![
+            Source::new("sample 1.2.3 tar.gz", "torrent://example.org/sample/sample-1.2.3.tar.gz", "54286070812a47b629f68757046d3c9a1bdd2b5d1c3b84a5c8e4cb92f1331afa745443f7238175835d8cfbe5b8dd442e00c75c3a5b5b8f8efd8d2ec8f636dad4"),
+            Source::new("sample.initd", "/etc/init.d/sample", "123"),
+        ],
+        options: vec![S!("check me")],
+        secfixes: vec![
+            Secfix::new("1.2.3", vec![S!("CVE-2022-12347"), S!("CVE-2022-12346")]),
+            Secfix::new("1.2.0-ra", vec![S!("CVE-2021-12345")]),
+        ],
+        ..Default::default()
+    };
+
+    assert_let!(Err(e) = apkbuild.validate(&()));
+    assert!(e.flatten().len() == 24);
+}
+
+#[test]
 fn read_apkbuild() {
     let fixture = Path::new("../fixtures/aports/sample/APKBUILD");
     assert!(ApkbuildReader::new().read_apkbuild(fixture).unwrap() == sample_apkbuild());

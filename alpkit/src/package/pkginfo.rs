@@ -1,10 +1,17 @@
+#[cfg(feature = "validate")]
+use garde::Validate;
+use mass_cfg_attr::mass_cfg_attr;
 use serde::{self, Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::dependency::Dependency;
 use crate::internal::key_value_vec_map;
 use crate::internal::macros::bail;
+#[cfg(feature = "validate")]
+use crate::internal::regex;
 use crate::internal::serde_key_value;
+#[cfg(feature = "validate")]
+use crate::internal::validators::{validate_email, validate_http_url, validate_some_email};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,36 +28,47 @@ pub enum PkgInfoError {
 
 /// This struct represents the `.PKGINFO` file.
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
+#[garde(allow_unvalidated)]
 pub struct PkgInfo {
     /// The name and email address of the package's maintainer. It should be in
     /// the RFC5322 mailbox format, e.g. `Kevin Flynn <kevin.flynn@encom.com>`.
+    #[garde(custom(validate_some_email))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maintainer: Option<String>,
 
     /// The package name.
+    #[garde(pattern(regex::PKGNAME))]
     pub pkgname: String,
 
     /// A full version of the package (including the release number `-r<n>`).
+    #[garde(pattern(regex::PKGVER_REL))]
     pub pkgver: String,
 
     /// A brief, one-line description of the package.
+    #[garde(length(max = 128), pattern(regex::ONE_LINE))]
     pub pkgdesc: String,
 
     /// The homepage of the packaged software.
+    #[garde(custom(validate_http_url))]
     pub url: String,
 
     /// The architecture of the package (e.g.: `x86_64`).
+    #[garde(pattern(regex::WORD))]
     pub arch: String,
 
     /// License(s) of the source code from which the package was built. It
     /// should be a SPDX license expression or a list of SPDX license
     /// identifiers separated by a space.
+    #[garde(ascii, pattern(regex::ONE_LINE))]
     pub license: String,
 
     /// Dependencies of this package. It doesn't contain “anti-dependencies”
     /// (conflicts, e.g. `!foo`), these are separated in the `conflicts` field.
     /// This also means that the `conflict` field in each [Dependency] is always
     /// `false`.
+    #[garde(dive)]
     #[serde(default, alias = "depend", with = "key_value_vec_map")]
     pub depends: Vec<Dependency>,
 
@@ -61,6 +79,7 @@ pub struct PkgInfo {
     /// “anti-dependencies” (conflicts, e.g. `!foo`) extracted from the
     /// `depend` field. The `conflict` field in each [Dependency] is always
     /// `false`.
+    #[garde(dive)]
     #[serde(default, with = "key_value_vec_map")]
     pub conflicts: Vec<Dependency>,
 
@@ -68,10 +87,12 @@ pub struct PkgInfo {
     /// this package. `install_if` can be used when a package needs to be
     /// installed when some packages are already installed or are in the
     /// dependency tree.
+    #[garde(dive)]
     #[serde(default, with = "key_value_vec_map")]
     pub install_if: Vec<Dependency>,
 
     /// Providers (packages) that this package provides.
+    #[garde(dive)]
     #[serde(default, with = "key_value_vec_map")]
     pub provides: Vec<Dependency>,
 
@@ -83,6 +104,7 @@ pub struct PkgInfo {
 
     /// Packages whose files this package is allowed to overwrite (i.e. both can
     /// be installed even if they have conflicting files).
+    #[garde(dive)]
     #[serde(default, with = "key_value_vec_map")]
     pub replaces: Vec<Dependency>,
 
@@ -96,28 +118,34 @@ pub struct PkgInfo {
     ///
     /// apk-tools can "monitor" directories and execute a trigger if any package
     /// installed/uninstalled any file in the monitored directory.
+    #[garde(inner(pattern(regex::TRIGGER_PATH)))]
     #[serde(default)]
     pub triggers: Vec<String>,
 
     /// The name of the APKBUILD (its main package) from which the package was built.
+    #[garde(pattern(regex::PKGNAME))]
     pub origin: String,
 
     /// The SHA-1 hash of the git commit from which the package was built.
+    #[garde(pattern(regex::SHA1))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub commit: Option<String>,
 
     /// An unix timestamp of the package build date/time.
+    #[garde(range(min = 0))]
     pub builddate: i64,
 
     /// The name and email address of the person (or machine) who built the
     /// package. It should be in the RFC5322 mailbox format, e.g.
     /// `Kevin Flynn <kevin.flynn@encom.com>`.
+    #[garde(custom(validate_email))]
     pub packager: String,
 
     /// The installed-size of the package in bytes.
     pub size: usize,
 
     /// The hex-encoded SHA-256 checksum of the data tarball.
+    #[garde(pattern(regex::SHA256))]
     pub datahash: String,
 }
 

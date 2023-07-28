@@ -7,11 +7,16 @@ use std::slice::Iter;
 use std::str::{self, FromStr};
 
 use flate2::bufread::GzDecoder;
+#[cfg(feature = "validate")]
+use garde::Validate;
+use mass_cfg_attr::mass_cfg_attr;
 use serde::{de, Deserialize, Serialize};
 use tar::Archive;
 use thiserror::Error;
 
 use crate::internal::macros::bail;
+#[cfg(feature = "validate")]
+use crate::internal::regex;
 
 pub use fileinfo::*;
 pub use pkginfo::*;
@@ -36,15 +41,21 @@ pub enum Error {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Deserialize, Serialize)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
 pub struct Package {
+    #[garde(dive)]
     signs: Vec<SignatureInfo>,
 
+    #[garde(dive)]
     #[serde(flatten)]
     pkginfo: PkgInfo,
 
+    #[garde(skip)]
     #[serde(default)]
     scripts: Vec<PkgScript>,
 
+    #[garde(dive)]
     files: Vec<FileInfo>,
 }
 
@@ -163,8 +174,14 @@ impl Package {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
 pub struct SignatureInfo {
+    /// Currently only `RSA` is supported.
+    #[garde(ascii)]
     pub alg: String,
+
+    #[garde(ascii, pattern(regex::FILE_NAME))]
     pub keyname: String,
 }
 
