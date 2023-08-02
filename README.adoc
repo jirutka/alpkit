@@ -3,9 +3,11 @@
 :gh-name: jirutka/{proj-name}
 :version: 0.1.0-pre.2
 :releases-uri: https://github.com/{gh-name}/releases/download/v{version}
+:msrv: 1.64
 
 ifdef::env-github[]
 image:https://img.shields.io/crates/v/{proj-name}.svg[Version on crates.io, link=https://crates.io/crates/{proj-name}]
+image:https://img.shields.io/badge/MSRV-{msrv}-informational[Minimal supported Rust version]
 image:https://docs.rs/{proj-name}/badge.svg[docs.rs, link=https://docs.rs/crate/{proj-name}/]
 image:https://github.com/{gh-name}/workflows/CI/badge.svg[CI Workflow, link=https://github.com/{gh-name}/actions?query=workflow%3A%22CI%22]
 endif::env-github[]

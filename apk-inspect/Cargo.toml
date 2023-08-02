@@ -2,11 +2,13 @@
 name = "apk-inspect"
 version = "0.1.0-pre.2"
 authors = ["Jakub Jirutka <jakub@jirutka.cz>"]
-edition = "2021"
 description = "A CLI tool for reading metadata from the APKv2 package format and APKBUILD."
 repository = "https://github.com/jirutka/alpkit"
 license = "MIT"
 keywords = ["cli", "alpine", "alpine-linux", "apk", "apk-tools"]
+
+edition = "2021"
+rust-version = "1.64"
 
 [features]
 default = ["flate2-rust"]

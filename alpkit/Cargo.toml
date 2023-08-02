@@ -2,11 +2,13 @@
 name = "alpkit"
 version = "0.1.0-pre.2"
 authors = ["Jakub Jirutka <jakub@jirutka.cz>"]
-edition = "2021"
 description = "A library for reading metadata from the APKv2 package format and APKBUILD."
 repository = "https://github.com/jirutka/alpkit"
 license = "MIT"
 keywords = ["alpine", "alpine-linux", "apk", "apk-tools"]
+
+edition = "2021"
+rust-version = "1.64"  # Alpine 3.17+
 
 [features]
 default = ["flate2-rust"]
@@ -34,7 +36,7 @@ tar = { version = "0.4", default-features = false }
 thiserror = "1.0"
 
 [dev-dependencies]
-assert2 = "0.3.6"
+assert2 = "=0.3.6"  # blocked by MSRV
 indoc = "1.0"
 serde_json = "1.0"
 
