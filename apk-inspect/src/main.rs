@@ -97,7 +97,7 @@ fn main() {
     }
 
     if let Err(e) = run(args) {
-        eprintln!("{}", format_error_message(e));
+        eprintln!("{}", format_error_message(&*e));
         exit(1);
     }
 }
@@ -159,10 +159,10 @@ fn dump_json<T: ?Sized + serde::Serialize>(
     }
 }
 
-fn format_error_message(error: Box<dyn error::Error>) -> String {
+fn format_error_message(error: &dyn error::Error) -> String {
     let mut msg = String::from(PROG_NAME);
 
-    let mut source = Some(error.as_ref());
+    let mut source = Some(error);
     while let Some(e) = source {
         msg.push_str(": ");
         msg.push_str(&e.to_string());
