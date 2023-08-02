@@ -79,10 +79,10 @@ impl fmt::Display for Dependency {
         }
         write!(f, "{}", self.name)?;
         if let Some(constraint) = &self.constraint {
-            write!(f, "{}", constraint)?;
+            write!(f, "{constraint}")?;
         }
         if let Some(repo_pin) = &self.repo_pin {
-            write!(f, "@{}", repo_pin)?;
+            write!(f, "@{repo_pin}")?;
         }
         Ok(())
     }

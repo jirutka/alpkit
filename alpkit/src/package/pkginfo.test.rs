@@ -117,5 +117,5 @@ fn json() {
 
     let pkg: PkgInfo = serde_json::from_str(input).unwrap();
 
-    println!("{:?}", pkg);
+    println!("{pkg:?}");
 }

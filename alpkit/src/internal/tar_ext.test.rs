@@ -30,7 +30,7 @@ fn header_device() {
 }
 
 fn open_fixture(path: &str) -> File {
-    let path = format!("../fixtures/{}", path);
+    let path = format!("../fixtures/{path}");
     File::open(&path).unwrap_or_else(|_| panic!("Fixture file `{}` not found", &path))
 }
 

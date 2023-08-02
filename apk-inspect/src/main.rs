@@ -92,7 +92,7 @@ fn main() {
     let args: AppOpts = argp::parse_args_or_exit(&Default::default());
 
     if args.version {
-        println!("{} {}", PROG_NAME, PROG_VERSION);
+        println!("{PROG_NAME} {PROG_VERSION}");
         exit(0);
     }
 
@@ -143,7 +143,7 @@ fn run(args: AppOpts) -> Result<(), Box<dyn std::error::Error>> {
 fn parse_env_var(s: &str) -> Result<(OsString, OsString), String> {
     s.split_once('=')
         .map(|(k, v)| (k.into(), v.into()))
-        .ok_or_else(|| format!("expected VAR=VALUE, but got: '{}'", s))
+        .ok_or_else(|| format!("expected VAR=VALUE, but got: '{s}'"))
 }
 
 fn dump_json<T: ?Sized + serde::Serialize>(

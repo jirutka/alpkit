@@ -171,7 +171,7 @@ fn test_decode_source_and_sha512sums() {
 
     assert_let!(Err(err @ Error::MissingChecksum(..)) = decode_source_and_sha512sums(source, sha512sums));
     assert!(
-        format!("{}", err).contains("bar-1.2.tar.gz"),
+        format!("{err}").contains("bar-1.2.tar.gz"),
         "error message should contain name of the missing checksum"
     );
 }

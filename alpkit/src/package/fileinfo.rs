@@ -126,13 +126,13 @@ fn is_zero(num: &u64) -> bool {
 }
 
 fn serialize_mode<S: serde::Serializer>(value: &u32, serializer: S) -> Result<S::Ok, S::Error> {
-    serializer.serialize_str(&format!("0{:o}", value))
+    serializer.serialize_str(&format!("0{value:o}"))
 }
 
 fn deserialize_mode<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<u32, D::Error> {
     let s: &str = Deserialize::deserialize(deserializer)?;
     u32::from_str_radix(s, 8)
-        .map_err(|_| de::Error::custom(format!("invalid value: `{}`, expected octal number", s)))
+        .map_err(|_| de::Error::custom(format!("invalid value: `{s}`, expected octal number")))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,8 +183,7 @@ impl TryFrom<tar::EntryType> for FileType {
             EntryType::Directory => FileType::Directory,
             EntryType::Fifo => FileType::Fifo,
             _ => bail!(io_error_other(format!(
-                "unexpected tar entry type: {:?}",
-                value
+                "unexpected tar entry type: {value:?}"
             ))),
         };
         Ok(file_type)

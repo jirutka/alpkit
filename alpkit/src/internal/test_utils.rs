@@ -11,5 +11,5 @@ pub(crate) use S;
 
 pub(crate) fn dependency(s: &str) -> Dependency {
     s.parse()
-        .unwrap_or_else(|_| panic!("invalid dependency string: `{}`", s))
+        .unwrap_or_else(|_| panic!("invalid dependency string: `{s}`"))
 }

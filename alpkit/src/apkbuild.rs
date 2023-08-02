@@ -352,10 +352,10 @@ impl ApkbuildReader {
         // filepath is validated in `.read_apkbuild`.
         let startdir = filepath
             .parent()
-            .unwrap_or_else(|| panic!("invalid APKBUILD path: `{:?}`", filepath));
+            .unwrap_or_else(|| panic!("invalid APKBUILD path: `{filepath:?}`"));
         let filename = filepath
             .file_name()
-            .unwrap_or_else(|| panic!("invalid APKBUILD path: `{:?}`", filepath));
+            .unwrap_or_else(|| panic!("invalid APKBUILD path: `{filepath:?}`"));
 
         let mut child = Command::new(&self.shell_cmd)
             .tap_mut_if(!self.inherit_env, |cmd| {
