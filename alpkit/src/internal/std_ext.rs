@@ -28,7 +28,7 @@ where
 pub(crate) trait ChunksExactIterator: Sized {
     /// Returns an iterator over `N` elements of the iterator at a time.
     ///
-    /// This is a custom implementation of [Iterator::array_chunks] for stable
+    /// This is a custom implementation of [`Iterator::array_chunks`] for stable
     /// Rust 1.66, but for simplicity without
     /// [`.into_remainder()`][std::iter::adapters::ArrayChunks].
     ///

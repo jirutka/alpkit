@@ -13,17 +13,18 @@ type ExitCode = i32;
 
 /// Describes the result of a process after it has failed
 ///
-/// Produced by the [`.exit_ok`](ExitStatusExt::exit_ok) method on [`ExitStatus`].
+/// Produced by the [`.exit_ok`](ExitStatusExt::exit_ok) method on
+/// [`ExitStatus`].
 ///
 /// This is implementation of the `exit_status_error` feature for stable Rust
-/// or [process_control] (when the `shell-timeout` feature is enabled).
+/// or [`process_control`] (when the `shell-timeout` feature is enabled).
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct ExitStatusError(ExitStatus);
 
 impl ExitStatusError {
     /// Reports the exit code, if applicable, from an `ExitStatusError`.
     ///
-    /// See [std::process::ExitStatusError]
+    /// See [`std::process::ExitStatusError`]
     pub fn code(&self) -> Option<ExitCode> {
         self.0.code()
     }

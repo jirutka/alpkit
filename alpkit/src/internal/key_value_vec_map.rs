@@ -50,8 +50,8 @@ where
     }
 }
 
-/// Deserializes a value implementing [Deserialize] and [KeyValueLike] into a
-/// vector using the given Serde deserializer.
+/// Deserializes a value implementing [`Deserialize`] and [`KeyValueLike`] into
+/// a vector using the given Serde deserializer.
 pub(crate) fn deserialize<'de, D, T, K, V>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
@@ -62,7 +62,7 @@ where
     deserializer.deserialize_any(KeyValueVecMapVisitor(PhantomData))
 }
 
-/// Serializes a vector of [KeyValueLike] elements into a map using
+/// Serializes a vector of [`KeyValueLike`] elements into a map using
 /// the given Serde serializer.
 pub(crate) fn serialize<'a, S, T, K, V>(vec: &'a Vec<T>, serializer: S) -> Result<S::Ok, S::Error>
 where
