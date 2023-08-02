@@ -58,11 +58,11 @@ fn constraint_from_str_invalid() {
 #[test]
 #[rustfmt::skip]
 fn dependency_key_value() {
-    for (kv        , constraint) in vec![
-        (("foo-doc", S!("*")), Dependency::new("foo-doc", None)                                               ),
-        (("foo-doc", S!("= 1.2.3")), Dependency::new("foo-doc", Some(Constraint::new(Op::Equal, "1.2.3")))    ),
-        (("foo"    , S!("<= 1.2")), Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1.2")))),
-        (("foo"    , S!("~ 1.2")), Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "1.2")))),
+    for (kv                        , constraint) in vec![
+        (("foo-doc", S!("*"))      , Dependency::new("foo-doc", None)                                           ),
+        (("foo-doc", S!("= 1.2.3")), Dependency::new("foo-doc", Some(Constraint::new(Op::Equal, "1.2.3")))      ),
+        (("foo"    , S!("<= 1.2")) , Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1.2"))) ),
+        (("foo"    , S!("~ 1.2"))  , Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "1.2")))),
     ] {
         assert!(constraint.to_key_value() == kv);
         assert!(Dependency::from_key_value(kv.0, kv.1).unwrap() == constraint);
