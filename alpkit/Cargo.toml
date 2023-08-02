@@ -15,7 +15,7 @@ default = ["flate2-rust"]
 # Add support for setting timeout for the APKBUILD interpretation.
 shell-timeout = ["dep:process_control"]
 # Add support for validation using the garde crate.
-validate = ["dep:garde", "dep:once_cell", "dep:regex"]
+validate = ["dep:garde", "dep:once_cell", "dep:regex-lite"]
 # Choose the flate2 backend. Note that flate2-rust and flate2-zlib
 # (or flate2-zlib-ng) can be enabled at the same time - in that case,
 # the latter is used.
@@ -28,11 +28,11 @@ base64 = "0.13"
 bitmask-enum = "2.1"
 field_names = "0.2"
 flate2 = { version = "1.0", default-features = false }
-garde = { version = "0.14.0", default-features = false, features = ["derive", "pattern"], optional = true }
+garde = { version = "0.14.0", default-features = false, features = ["derive"], optional = true }
 mass-cfg-attr = "0.2"
 once_cell = { version = "1.0", optional = true }
 process_control = { version = "4.0", optional = true }
-regex = { version = "1", default-features = false, features = ["std"], optional = true }
+regex-lite = { version = "0.1", optional = true }
 # Due to https://github.com/serde-rs/serde/issues/2538
 serde = { version = "1.0, < 1.0.172", features = ["derive"] }
 tar = { version = "0.4", default-features = false }

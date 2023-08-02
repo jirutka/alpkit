@@ -1,3 +1,4 @@
+use garde::rules::pattern::Matcher;
 use garde::{Error, Result};
 
 use crate::internal::regex;
