@@ -77,14 +77,9 @@ pub struct Apkbuild {
     /// Homepage of the software being packaged.
     pub url: String,
 
-    /// Package architecture(s) to build for. It contains one or several of: the
-    /// architecture code (e.g. `x86_64`), `all` or `noarch`. `all` means all
-    /// architectures and `noarch` means that it's architecture-independent
-    /// (e.g. a pure-python package). Architectures can be negated using the `!`
-    /// character to exclude them from the list of supported architectures. For
-    /// example `["all", "!ppc64le"]` means that the package is allowed to be
-    /// built on all architectures but the `ppc64le` architecture.
-    // TODO: Replace String with an enum.
+    /// Package architecture(s) to build for. It doesn't contain `all`, `noarch`
+    /// or negated architectures -- `arch` is resolved on APKBUILD parsing as
+    /// per [`ApkbuildReader::arch_all`].
     #[serde(default)]
     pub arch: Vec<String>,
 
@@ -242,7 +237,14 @@ impl<'a> KeyValueLike<'a> for Secfix {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// The default list of CPU architectures (arch) to which the `all` and `noarch`
+/// keywords are expanded.
+pub const ARCH_ALL: &[&str] = &[
+    "aarch64", "armhf", "armv7", "ppc64le", "riscv64", "s390x", "x86", "x86_64",
+];
+
 pub struct ApkbuildReader {
+    arch_all: Vec<String>,
     env: HashMap<OsString, OsString>,
     inherit_env: bool,
     shell_cmd: OsString,
@@ -256,6 +258,13 @@ pub struct ApkbuildReader {
 impl ApkbuildReader {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Changes the list of CPU architectures (arch) to which the `all` and
+    /// `noarch` keywords are expanded. The default is [`ARCH_ALL`].
+    pub fn arch_all<S: ToString>(&mut self, arches: &[S]) -> &mut Self {
+        self.arch_all.extend(arches.iter().map(|s| s.to_string()));
+        self
     }
 
     /// Inserts or updates an environment variable mapping.
@@ -307,6 +316,7 @@ impl ApkbuildReader {
 
         let values = self.evaluate(filepath)?;
 
+        let mut arch: Option<&str> = None;
         let mut sha512sums: Option<&str> = None;
         let mut source: Option<&str> = None;
 
@@ -316,6 +326,7 @@ impl ApkbuildReader {
             .zip(values.trim_end().split_terminator('\x1E'))
             .fold(Vec::with_capacity(64), |mut acc, (key, val)| {
                 match *key {
+                    "arch" => arch = Some(val),
                     "source" => source = Some(val),
                     "sha512sums" => sha512sums = Some(val),
                     "license" | "pkgdesc" | "pkgver" | "url" => {
@@ -335,6 +346,9 @@ impl ApkbuildReader {
 
         let mut apkbuild: Apkbuild = serde_key_value::from_ordered_pairs(parsed)?;
 
+        if let Some(arch) = arch {
+            apkbuild.arch = parse_and_expand_arch(arch, &self.arch_all);
+        }
         if let Some(source) = source {
             apkbuild.source = decode_source_and_sha512sums(source, sha512sums.unwrap_or(""))?;
         }
@@ -424,6 +438,7 @@ impl Default for ApkbuildReader {
             .into_bytes();
 
         Self {
+            arch_all: ARCH_ALL.iter().map(|s| s.to_string()).collect(), // this is suboptiomal :/
             shell_cmd: "/bin/sh".into(),
             env: HashMap::from([("PATH".into(), path)]),
             inherit_env: false,
@@ -432,6 +447,23 @@ impl Default for ApkbuildReader {
             eval_script,
         }
     }
+}
+
+fn parse_and_expand_arch<'v, 's: 'v>(value: &'v str, arch_all: &'s [String]) -> Vec<String> {
+    value
+        .split_ascii_whitespace()
+        .fold(vec![], |mut acc, token| {
+            match token {
+                "all" | "noarch" => acc.extend(arch_all.iter().map(String::clone)),
+                s if s.starts_with('!') => acc.retain(|arch| arch != &s[1..]),
+                s => acc.push(s.to_owned()),
+            };
+            acc
+        })
+        .tap_mut(|v| {
+            v.sort();
+            v.dedup();
+        })
 }
 
 fn parse_comment_attribute<'a>(name: &str, line: &'a str) -> Option<&'a str> {

@@ -18,11 +18,11 @@ fn read_apkbuild() {
         pkgrel: 2,
         pkgdesc: S!("A sample aport for testing"),
         url: S!("https://example.org/sample"),
-        arch: vec![
-            S!("all"),
-            S!("!riscv64"),
-            S!("!s390x")
-        ],
+        arch: ARCH_ALL
+            .iter()
+            .filter(|s| !matches!(**s, "riscv64" | "s390x"))
+            .map(ToString::to_string)
+            .collect(),
         license: S!("ISC and BSD-2-Clause and BSD-3-Clause"),
         depends: vec![
             dependency("ruby>=3.0"),
