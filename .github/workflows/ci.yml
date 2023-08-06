@@ -93,7 +93,6 @@ jobs:
     strategy:
       matrix:
         features:
-          - base64
           - shell-timeout
           - flate2-zlib --no-default-features
           - flate2-zlib-ng --no-default-features

@@ -3,7 +3,6 @@ use std::error;
 use std::io::{self, Read};
 use std::path::PathBuf;
 
-use cfg_iif::cfg_iif;
 use serde::{de, Deserialize, Serialize};
 
 use crate::internal::key_value_vec_map::{self, KeyValueLike};
@@ -210,30 +209,17 @@ impl From<(&str, &[u8])> for Xattr {
 impl<'a> KeyValueLike<'a> for Xattr {
     type Key = &'a str;
     type Value = String;
-
-    #[cfg(feature = "base64")]
     type Err = base64::DecodeError;
-    #[cfg(not(feature = "base64"))]
-    type Err = std::convert::Infallible;
 
     fn from_key_value(key: Self::Key, value: Self::Value) -> Result<Self, Self::Err> {
         Ok(Xattr {
             name: key.to_owned(),
-            value: cfg_iif!(feature = "base64" {
-                base64::decode(value)?
-            } else {
-                value.into()
-            }),
+            value: base64::decode(value)?,
         })
     }
 
     fn to_key_value(&'a self) -> (Self::Key, Self::Value) {
-        let value = cfg_iif!(feature = "base64" {
-            base64::encode(&self.value)
-        } else {
-            "".to_string()
-        });
-
+        let value = base64::encode(&self.value);
         (&self.name, value)
     }
 }

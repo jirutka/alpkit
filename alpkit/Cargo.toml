@@ -12,9 +12,6 @@ rust-version = "1.64"  # Alpine 3.17+
 
 [features]
 default = ["flate2-rust"]
-# Encode/decode `xattrs` in JSON with base64. If disabled, `xattr` values will
-# be empty.
-base64 = ["dep:base64"]
 # Add support for setting timeout for the APKBUILD interpretation.
 shell-timeout = ["dep:process_control"]
 # Choose the flate2 backend. Note that flate2-rust and flate2-zlib
@@ -25,9 +22,8 @@ flate2-zlib = ["flate2/zlib"]
 flate2-zlib-ng = ["flate2/zlib-ng"]
 
 [dependencies]
-base64 = { version = "0.13", optional = true }
+base64 = "0.13"
 bitmask-enum = "2.1"
-cfg-iif = "0.2"
 field_names = "0.2"
 flate2 = { version = "1.0", default-features = false }
 process_control = { version = "4.0", optional = true }

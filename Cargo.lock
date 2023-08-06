@@ -15,7 +15,6 @@ dependencies = [
  "assert2",
  "base64",
  "bitmask-enum",
- "cfg-iif",
  "field_names",
  "flate2",
  "indoc",
@@ -124,12 +123,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "cfg-iif"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "068494611101e5750de5d753e8cda5e92ef34eb285c4d194e7f1dd6e88830f2d"
 
 [[package]]
 name = "cmake"

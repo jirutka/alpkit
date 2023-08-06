@@ -20,7 +20,7 @@ flate2-zlib = ["alpkit/flate2-zlib"]
 flate2-zlib-ng = ["alpkit/flate2-zlib-ng"]
 
 [dependencies]
-alpkit = { path = "../alpkit", default-features = false, features = ["base64", "shell-timeout"] }
+alpkit = { path = "../alpkit", default-features = false, features = ["shell-timeout"] }
 argp = "0.3.0"
 serde = "1.0"
 serde_json = "1.0"
