@@ -6,6 +6,8 @@ use std::path::PathBuf;
 #[cfg(feature = "validate")]
 use garde::Validate;
 use mass_cfg_attr::mass_cfg_attr;
+#[cfg(feature = "schema-gen")]
+use schemars::JsonSchema;
 use serde::{de, Deserialize, Serialize};
 
 use crate::internal::key_value_vec_map::{self, KeyValueLike};
@@ -19,7 +21,9 @@ use crate::internal::regex;
 /// an APK package archive.
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "validate", derive(Validate))]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 #[mass_cfg_attr(feature = "validate", garde)]
+#[mass_cfg_attr(feature = "schema-gen", schemars)]
 #[garde(allow_unvalidated)]
 pub struct FileInfo {
     /// An absolute path of the file.
@@ -36,11 +40,13 @@ pub struct FileInfo {
 
     /// The name of the system user who owns the file.
     #[garde(pattern(regex::USER_NAME))]
+    #[schemars(regex = "regex::USER_NAME")]
     #[serde(default = "root", skip_serializing_if = "is_root")]
     pub uname: String,
 
     /// The name of the sytem group that owns the file.
     #[garde(pattern(regex::USER_NAME))]
+    #[schemars(regex = "regex::USER_NAME")]
     #[serde(default = "root", skip_serializing_if = "is_root")]
     pub gname: String,
 
@@ -62,10 +68,12 @@ pub struct FileInfo {
 
     /// The SHA-1 checksum of the file.
     #[garde(pattern(regex::SHA1))]
+    #[schemars(regex = "regex::SHA1")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub digest: Option<String>,
 
     /// Extended file attributes (xattr) of the entry.
+    #[schemars(with = "std::collections::HashMap<String, String>")]
     #[serde(
         default,
         with = "key_value_vec_map",
@@ -148,6 +156,7 @@ fn deserialize_mode<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 pub enum FileType {
     /// Regular file
     #[serde(rename = "r")]

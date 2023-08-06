@@ -1,6 +1,44 @@
 use super::*;
 
 #[test]
+#[cfg(feature = "schema-gen")]
+fn dep_constraint_valid() {
+    for input in &[
+        "*",
+        "!",
+        "= 1.2.3",
+        ">0.2",
+        ">= 0.2",
+        "<= 2.4.6_beta_pre2-r123",
+        "~= 1.2",
+        "!= 1.2.3",
+        "!> 1.2",
+    ] {
+        assert!(DEP_CONSTRAINT.is_match(input), "{input}");
+    }
+}
+
+#[test]
+#[rustfmt::skip]
+#[cfg(feature = "schema-gen")]
+fn dep_constraint_invalid() {
+    for input in &[
+        "**",
+        "!!",
+        "!*",
+        "*!",
+        ">",
+        "* 0.2",
+        ">  0.2",
+        ">>= 0.2",
+        "= alpha",
+        ">! 0.2",
+    ] {
+        assert!(!DEP_CONSTRAINT.is_match(input), "{input}");
+    }
+}
+
+#[test]
 fn email_valid() {
     for input in &[
         "Kevin Flynn <kevin.flynn@encom.com>",
@@ -212,6 +250,7 @@ fn pkgver_invalid() {
 #[test]
 fn provider_valid() {
     for input in &[
+        "nginx",
         "cmd:rust",
         "cmd:[",
         "so:libconfig++.so.11",
@@ -227,6 +266,7 @@ fn provider_valid() {
 #[rustfmt::skip]
 fn provider_invalid() {
     for input in &[
+        "nginx!",
         "cmd:>",
         "spa ce",
         "key=val",
@@ -234,6 +274,40 @@ fn provider_invalid() {
         "αlpha",
     ] {
         assert!(!PROVIDER.is_match(input), "{input}");
+    }
+}
+
+#[test]
+#[rustfmt::skip]
+#[cfg(feature = "schema-gen")]
+fn provider_with_constraint_valid() {
+    for input in &[
+        "nginx",
+        "!nginx<1.24",
+        "cmd:rust=~1.71",
+        "cmd:[",
+        "so:libconfig++.so.11>=1.73.0-r0",
+        "so:libGL.so.1=23.1.4-r0",
+        "py3.10:future~0.18",
+        "/bin/sh",
+    ] {
+        assert!(PROVIDER_WITH_CONSTRAINT.is_match(input), "{input}");
+    }
+}
+
+#[test]
+#[rustfmt::skip]
+#[cfg(feature = "schema-gen")]
+fn provider_with_constraint_invalid() {
+    for input in &[
+        "nginx!",
+        ">=0",
+        "spa ce",
+        "key=val",
+        "tilde~",
+        "αlpha",
+    ] {
+        assert!(!PROVIDER_WITH_CONSTRAINT.is_match(input), "{input}");
     }
 }
 
@@ -510,4 +584,3 @@ fn word_invalid() {
         assert!(!WORD.is_match(input), "{input}");
     }
 }
-

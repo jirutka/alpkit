@@ -13,6 +13,8 @@ use garde::Validate;
 use mass_cfg_attr::mass_cfg_attr;
 #[cfg(feature = "shell-timeout")]
 use process_control::{ChildExt, Control};
+#[cfg(feature = "schema-gen")]
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -22,6 +24,8 @@ use crate::internal::key_value_vec_map::{self, KeyValueLike};
 use crate::internal::macros::bail;
 #[cfg(feature = "validate")]
 use crate::internal::regex;
+#[cfg(feature = "schema-gen")]
+use crate::internal::schema;
 use crate::internal::serde_key_value;
 use crate::internal::std_ext::{ChunksExactIterator, Tap};
 #[cfg(feature = "validate")]
@@ -60,27 +64,33 @@ pub enum Error {
 
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, FieldNames)]
 #[cfg_attr(feature = "validate", derive(Validate))]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 #[mass_cfg_attr(feature = "validate", garde)]
+#[mass_cfg_attr(feature = "schema-gen", schemars)]
 #[garde(allow_unvalidated)]
 pub struct Apkbuild {
     /// The name and email address of the package's maintainer. It should be in
     /// the RFC5322 mailbox format, e.g. `Kevin Flynn <kevin.flynn@encom.com>`.
     #[field_names(skip)] // parsed from comments
     #[garde(custom(validate_some_email))]
+    #[schemars(email)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maintainer: Option<String>,
 
     #[field_names(skip)] // parsed from comments
     #[garde(inner(custom(validate_email)))]
+    #[schemars(inner(email))]
     #[serde(default)]
     pub contributors: Vec<String>,
 
     /// The name of the main package built from this APKBUILD.
     #[garde(pattern(regex::PKGNAME))]
+    #[schemars(regex = "regex::PKGNAME")]
     pub pkgname: String,
 
     /// The version of the software being packaged.
     #[garde(pattern(regex::PKGVER))]
+    #[schemars(regex = "regex::PKGVER")]
     pub pkgver: String,
 
     /// Alpine package release number (starts at 0).
@@ -88,16 +98,19 @@ pub struct Apkbuild {
 
     /// A brief, one-line description of the APKBUILD's main package.
     #[garde(length(max = 128), pattern(regex::ONE_LINE))]
+    #[schemars(length(max = 128), regex = "regex::ONE_LINE")]
     pub pkgdesc: String,
 
     /// Homepage of the software being packaged.
     #[garde(custom(validate_http_url))]
+    #[schemars(url)]
     pub url: String,
 
     /// Package architecture(s) to build for. It doesn't contain `all`, `noarch`
     /// or negated architectures -- `arch` is resolved on APKBUILD parsing as
     /// per [`ApkbuildReader::arch_all`].
     #[garde(inner(pattern(regex::WORD)))]
+    #[schemars(inner(regex = "regex::WORD"))]
     #[serde(default)]
     pub arch: Vec<String>,
 
@@ -105,31 +118,37 @@ pub struct Apkbuild {
     /// also all subpackages) is built. It should be a SPDX license expression
     /// or a list of SPDX license identifiers separated by a space.
     #[garde(ascii, pattern(regex::ONE_LINE))]
+    #[schemars(regex = "regex::ONE_LINE")]
     pub license: String,
 
     /// Manually specified run-time dependencies of the main package. This
     /// doesn't include dependencies that are autodiscovered by the `abuild`
     /// tool during the build of the package (e.g. shared object dependencies).
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub depends: Vec<Dependency>,
 
     /// Build-time dependencies.
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub makedepends: Vec<Dependency>,
 
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub makedepends_build: Vec<Dependency>,
 
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub makedepends_host: Vec<Dependency>,
 
     /// Dependencies that are only required during the check phase (i.e. for
     /// running tests).
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub checkdepends: Vec<Dependency>,
 
@@ -138,21 +157,25 @@ pub struct Apkbuild {
     /// to be installed when some packages are already installed or are in the
     /// dependency tree.
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub install_if: Vec<Dependency>,
 
     /// System users to be created when building the package(s).
     #[garde(inner(pattern(regex::USER_NAME)))]
+    #[schemars(inner(regex = "regex::USER_NAME"))]
     #[serde(default)]
     pub pkgusers: Vec<String>,
 
     /// System groups to be created when building the package(s).
     #[garde(inner(pattern(regex::USER_NAME)))]
+    #[schemars(inner(regex = "regex::USER_NAME"))]
     #[serde(default)]
     pub pkggroups: Vec<String>,
 
     /// Providers (packages) that the APKBUILD's main package provides.
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub provides: Vec<Dependency>,
 
@@ -165,11 +188,13 @@ pub struct Apkbuild {
     /// The prefix for all providers derived by parsing pkg-config's name or
     /// `Requires:`.
     #[garde(pattern(regex::PROVIDER))]
+    #[schemars(regex = "regex::PROVIDER")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pcprefix: Option<String>,
 
     /// The prefix for all providers derived by parsing shared objects.
     #[garde(pattern(regex::PROVIDER))]
+    #[schemars(regex = "regex::PROVIDER")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sonameprefix: Option<String>,
 
@@ -177,6 +202,7 @@ pub struct Apkbuild {
     /// overwrite (i.e. both can be installed even if they have conflicting
     /// files).
     #[garde(dive)]
+    #[schemars(with = "schema::Dependencies")]
     #[serde(default, with = "key_value_vec_map")]
     pub replaces: Vec<Dependency>,
 
@@ -194,6 +220,7 @@ pub struct Apkbuild {
 
     /// Subpackages (names) built from this APKBUILD.
     #[garde(inner(pattern(regex::PKGNAME)))]
+    #[schemars(inner(regex = "regex::PKGNAME"))]
     #[serde(default)]
     pub subpackages: Vec<String>,
 
@@ -204,14 +231,16 @@ pub struct Apkbuild {
 
     /// Build-time options for the `abuild` tool.
     #[garde(inner(pattern(regex::NEGATABLE_WORD)))]
+    #[schemars(inner(regex = "regex::NEGATABLE_WORD"))]
     #[serde(default)]
     pub options: Vec<String>,
 
     /// A map of security vulnerabilities (CVE identifier) fixed in each version
     /// of the APKBUILD's package(s).
-    #[garde(dive)]
-    #[serde(default, with = "key_value_vec_map")]
     #[field_names(skip)] // parsed from comments
+    #[garde(dive)]
+    #[schemars(with = "schema::Secfixes")]
+    #[serde(default, with = "key_value_vec_map")]
     pub secfixes: Vec<Secfix>,
 }
 
@@ -219,10 +248,13 @@ pub struct Apkbuild {
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "validate", derive(Validate))]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 #[mass_cfg_attr(feature = "validate", garde)]
+#[mass_cfg_attr(feature = "schema-gen", schemars)]
 pub struct Source {
     /// The file name.
     #[garde(pattern(regex::FILE_NAME))]
+    #[schemars(regex = "regex::FILE_NAME")]
     pub name: String,
 
     /// URI of the file. This is either URL of the remote file or path of the
@@ -232,6 +264,7 @@ pub struct Source {
 
     /// SHA-512 checksum of the file.
     #[garde(pattern(regex::SHA512))]
+    #[schemars(regex = "regex::SHA512")]
     pub checksum: String,
 }
 
@@ -261,7 +294,7 @@ pub struct Secfix {
     pub version: String,
 
     /// A set of CVE identifiers.
-    #[garde(skip)]
+    #[garde(skip)] // FIXME
     pub fixes: Vec<String>,
 }
 

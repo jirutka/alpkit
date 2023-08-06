@@ -5,6 +5,8 @@ pub(crate) mod key_value_vec_map;
 pub(crate) mod macros;
 #[cfg(feature = "validate")]
 pub(crate) mod regex;
+#[cfg(feature = "schema-gen")]
+pub(crate) mod schema;
 pub(crate) mod serde_key_value;
 pub(crate) mod std_ext;
 pub(crate) mod tar_ext;

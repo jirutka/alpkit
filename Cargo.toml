@@ -2,6 +2,11 @@
 members = [
     "alpkit",
     "apk-inspect",
+    "schema-gen",
+]
+default-members = [
+    "alpkit",
+    "apk-inspect",
 ]
 
 [profile.release]

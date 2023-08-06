@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use garde::rules::pattern::Matcher;
 use garde::rules::AsStr;
 use once_cell::sync::Lazy;
@@ -28,10 +30,23 @@ impl AsStr for LazyRegex {
     }
 }
 
+impl Display for LazyRegex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 // This is a bit stricter than apk-tools, which allows letters in more places
 // than is sensible, but it's compatible with what's used in aports.
 const PKGVER_PART: &str = r"[0-9]+(?:\.[0-9]+)*[a-z]?[0-9]*(?:_[a-z]+[0-9]*)*";
+const PROVIDER_PART: &str = r"[a-zA-Z0-9_.+\-:/\[\]]+";
 
+#[cfg(feature = "schema-gen")]
+pub(crate) static DEP_CONSTRAINT: LazyRegex = lazy_regex!(
+    r"^(?:\*||!|!?[<>=~]{1,2} ?",
+    PKGVER_PART,
+    r"(?:-r[0-9]+)?)$"
+);
 pub(crate) static FILE_NAME: LazyRegex = lazy_regex!(r"^[^/\t\n\r ]+$");
 pub(crate) static NEGATABLE_WORD: LazyRegex = lazy_regex!(r"^!?[a-z0-9_-]+$");
 pub(crate) static ONE_LINE: LazyRegex = lazy_regex!(r"^[^\n\r]*$");
@@ -42,7 +57,7 @@ pub(crate) static PKGVER_MAYBE_REL: LazyRegex = lazy_regex!("^", PKGVER_PART, r"
 pub(crate) static PKGVER_REL: LazyRegex = lazy_regex!("^", PKGVER_PART, r"-r[0-9]+$");
 pub(crate) static PKGVER_REL_OR_ZERO: LazyRegex = lazy_regex!("^(?:", PKGVER_PART, "-r[0-9]+|0)$");
 // This is not codified anywhere, this regex is based on the current practice.
-pub(crate) static PROVIDER: LazyRegex = lazy_regex!(r"^[a-zA-Z0-9_.+\-:/\[\]]+$");
+pub(crate) static PROVIDER: LazyRegex = lazy_regex!("^", PROVIDER_PART, "$");
 // This is not codified anywhere, this regex is empirical.
 pub(crate) static REPO_PIN: LazyRegex = lazy_regex!(r"^[^\t\n\r @<>=~]+$");
 pub(crate) static SHA1: LazyRegex = lazy_regex!(r"^[a-f0-9]{40}$");
@@ -51,6 +66,15 @@ pub(crate) static SHA512: LazyRegex = lazy_regex!(r"^[a-f0-9]{128}$");
 pub(crate) static TRIGGER_PATH: LazyRegex = lazy_regex!(r"^(?:/[^/\t\n\r :]+)+/?$");
 pub(crate) static USER_NAME: LazyRegex = lazy_regex!(r"^[a-z_][a-z0-9._-]*\$?$");
 pub(crate) static WORD: LazyRegex = lazy_regex!(r"^[a-z0-9_-]+$");
+
+#[cfg(feature = "schema-gen")]
+pub(crate) static PROVIDER_WITH_CONSTRAINT: LazyRegex = lazy_regex!(
+    r"^!?",
+    PROVIDER_PART,
+    r"(?:[<>=~]{1,2}",
+    PKGVER_PART,
+    r"(?:-r[0-9]+)?)?$"
+);
 
 /// A simplified regex for validation of email address in the mailbox format
 /// (e.g. `Kevin Flynn <kevin.flynn@encom.com>`).
@@ -102,5 +126,6 @@ pub(crate) static URL: LazyRegex = lazy_regex!(
 );
 
 #[cfg(test)]
+#[rustfmt::skip]
 #[path = "regex.test.rs"]
 mod test;

@@ -1,0 +1,10 @@
+[package]
+name = "schema-gen"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+alpkit = { path = "../alpkit", features = ["schema-gen"] }
+schemars = { git = "https://github.com/jirutka/schemars.git", branch = "vec-of-str-num-validation", features = ["preserve_order"] }
+serde_json = "1.0"

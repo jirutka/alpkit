@@ -10,6 +10,8 @@ use flate2::bufread::GzDecoder;
 #[cfg(feature = "validate")]
 use garde::Validate;
 use mass_cfg_attr::mass_cfg_attr;
+#[cfg(feature = "schema-gen")]
+use schemars::JsonSchema;
 use serde::{de, Deserialize, Serialize};
 use tar::Archive;
 use thiserror::Error;
@@ -42,7 +44,9 @@ pub enum Error {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "validate", derive(Validate))]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 #[mass_cfg_attr(feature = "validate", garde)]
+#[mass_cfg_attr(feature = "schema-gen", schemars)]
 pub struct Package {
     #[garde(dive)]
     signs: Vec<SignatureInfo>,
@@ -175,6 +179,7 @@ impl Package {
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "validate", derive(Validate))]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 #[mass_cfg_attr(feature = "validate", garde)]
 pub struct SignatureInfo {
     /// Currently only `RSA` is supported.
@@ -201,6 +206,7 @@ impl SignatureInfo {
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "schema-gen", derive(JsonSchema))]
 pub enum PkgScript {
     PreInstall,
     PostInstall,
