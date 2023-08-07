@@ -54,10 +54,13 @@ pub(crate) trait TarHeaderExt {
 
 impl TarHeaderExt for tar::Header {
     fn device(&self) -> io::Result<Option<u64>> {
-        let major = self.device_major()?;
-        let minor = self.device_minor()?;
+        let major = self.device_major();
+        let minor = self.device_minor();
 
-        if let (Some(major), Some(minor)) = (major, minor) {
+        // XXX: device_major() and device_minor() returns Err on a regular file
+        // or directory in some APK files with an error:
+        // "numeric field was not a number: when getting device_major for ...".
+        if let (Ok(Some(major)), Ok(Some(minor))) = (major, minor) {
             Ok(Some(makedev(major, minor)))
         } else {
             Ok(None)
