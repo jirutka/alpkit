@@ -32,6 +32,7 @@ tar = { version = "0.4", default-features = false }
 thiserror = "1.0"
 
 [dev-dependencies]
+assert-json-diff = "2.0"
 assert2 = "=0.3.6"  # blocked by MSRV
 indoc = "1.0"
 serde_json = "1.0"
