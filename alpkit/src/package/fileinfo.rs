@@ -232,3 +232,9 @@ where
 {
     io::Error::new(io::ErrorKind::Other, error.into())
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+#[path = "fileinfo.test.rs"]
+mod test;

@@ -1,8 +1,38 @@
+use assert_json_diff::assert_json_eq;
 use indoc::indoc;
+use serde_json::json;
 
-use crate::internal::test_utils::{assert, assert_let, dependency, S};
+use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, dependency, S};
 
 use super::*;
+
+fn sample_pkginfo() -> PkgInfo {
+    PkgInfo {
+        pkgname: S!("sample"),
+        pkgver: S!("1.2.3-r2"),
+        pkgdesc: S!("A sample aport for testing"),
+        url: S!("https://example.org/sample"),
+        builddate: 1671582086,
+        packager: S!("Jakub Jirutka <jakub@jirutka.cz>"),
+        size: 696320,
+        arch: S!("x86_64"),
+        origin: S!("sample"),
+        commit: Some(S!("994dcb4685405e710a1e599cff82d2e45ec9daae")),
+        maintainer: Some(S!("Jakub Jirutka <jakub@jirutka.cz>")),
+        license: S!("ISC and BSD-2-Clause and BSD-3-Clause"),
+        triggers: vec![S!("/bin/*"), S!("/usr/bin/*")],
+        depends: vec![
+            dependency("ruby>=3.0"),
+            dependency("so:libc.musl-x86_64.so.1"),
+        ],
+        conflicts: vec![dependency("sample-legacy")],
+        install_if: vec![dependency("sample=1.2.3-r2"), dependency("bar")],
+        provides: vec![dependency("cmd:sample=1.2.3-r2")],
+        provider_priority: Some(10),
+        datahash: S!("4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b"),
+        ..Default::default()
+    }
+}
 
 #[test]
 fn pkginfo_parse() {
@@ -32,33 +62,8 @@ fn pkginfo_parse() {
         depend = so:libc.musl-x86_64.so.1
         datahash = 4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b
     "};
-    let expected = PkgInfo {
-        pkgname: S!("sample"),
-        pkgver: S!("1.2.3-r2"),
-        pkgdesc: S!("A sample aport for testing"),
-        url: S!("https://example.org/sample"),
-        builddate: 1671582086,
-        packager: S!("Jakub Jirutka <jakub@jirutka.cz>"),
-        size: 696320,
-        arch: S!("x86_64"),
-        origin: S!("sample"),
-        commit: Some(S!("994dcb4685405e710a1e599cff82d2e45ec9daae")),
-        maintainer: Some(S!("Jakub Jirutka <jakub@jirutka.cz>")),
-        license: S!("ISC and BSD-2-Clause and BSD-3-Clause"),
-        triggers: vec![S!("/bin/*"), S!("/usr/bin/*")],
-        depends: vec![
-            dependency("ruby>=3.0"),
-            dependency("so:libc.musl-x86_64.so.1"),
-        ],
-        conflicts: vec![dependency("sample-legacy")],
-        install_if: vec![dependency("sample=1.2.3-r2"), dependency("bar")],
-        provides: vec![dependency("cmd:sample=1.2.3-r2")],
-        provider_priority: Some(10),
-        datahash: S!("4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b"),
-        ..Default::default()
-    };
 
-    assert!(PkgInfo::parse(input).unwrap() == expected);
+    assert!(PkgInfo::parse(input).unwrap() == sample_pkginfo());
 }
 
 #[test]
@@ -81,41 +86,88 @@ fn parse_key_value_with_missing_equals() {
 }
 
 #[test]
-fn json() {
-    let input = indoc!(
-        r#"
-        {
-        "pkgname": "gitea",
-        "pkgver": "1.17.3-r2",
-        "pkgdesc": "A self-hosted Git service written in Go",
-        "url": "https://gitea.io",
-        "builddate": 1670896833,
-        "packager": "Buildozer <alpine-devel@lists.alpinelinux.org>",
-        "size": 131379200,
-        "arch": "x86_64",
-        "origin": "gitea",
-        "commit": "c872e600df22c6a82ec6cc4e8c38007b0d52abe1",
-        "maintainer": "6543 <6543@obermui.de>",
-        "license": "MIT",
-        "depend": {
-            "ruby": "*",
-            "so:libc.musl-x86_64.so.1": "*"
-        },
-        "provides": ["cmd:gitea=1.17.3-r2"],
-        "triggers": [],
-        "install_if": {
-            "foo": "=1.2.3-r0",
-            "bar": "*"
-        },
-        "datahash": "17b7126d804b8ad8cfcd9c76d3482b35966ca298a590ade6c49fc791b4436e7d",
-        "scripts": [
-            "pre-install"
-        ]
-        }
-    "#
+fn pkginfo_json() {
+    assert_from_to_json!(
+        sample_pkginfo(),
+        json!({
+            "maintainer": "Jakub Jirutka <jakub@jirutka.cz>",
+            "pkgname": "sample",
+            "pkgver": "1.2.3-r2",
+            "pkgdesc": "A sample aport for testing",
+            "url": "https://example.org/sample",
+            "arch": "x86_64",
+            "license": "ISC and BSD-2-Clause and BSD-3-Clause",
+            "depends": {
+                "ruby": ">= 3.0",
+                "so:libc.musl-x86_64.so.1": "*"
+            },
+            "conflicts": {
+                "sample-legacy": "*"
+            },
+            "install_if": {
+                "sample": "= 1.2.3-r2",
+                "bar": "*"
+            },
+            "provides": {
+                "cmd:sample": "= 1.2.3-r2"
+            },
+            "provider_priority": 10,
+            "replaces": {},
+            "triggers": [
+                "/bin/*",
+                "/usr/bin/*"
+            ],
+            "origin": "sample",
+            "commit": "994dcb4685405e710a1e599cff82d2e45ec9daae",
+            "builddate": 1671582086,
+            "packager": "Jakub Jirutka <jakub@jirutka.cz>",
+            "size": 696320,
+            "datahash": "4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b"
+        }),
     );
+}
 
-    let pkg: PkgInfo = serde_json::from_str(input).unwrap();
+#[test]
+fn pkginfo_json_with_dependency_arrays() {
+    let pkginfo_json = json!({
+        "maintainer": "Jakub Jirutka <jakub@jirutka.cz>",
+        "pkgname": "sample",
+        "pkgver": "1.2.3-r2",
+        "pkgdesc": "A sample aport for testing",
+        "url": "https://example.org/sample",
+        "arch": "x86_64",
+        "license": "ISC and BSD-2-Clause and BSD-3-Clause",
+        "depends": [
+            "ruby>=3.0",
+            "so:libc.musl-x86_64.so.1"
+        ],
+        "conflicts": [
+            "sample-legacy"
+        ],
+        "install_if": [
+            "sample=1.2.3-r2",
+            "bar"
+        ],
+        "provides": [
+            "cmd:sample=1.2.3-r2"
+        ],
+        "provider_priority": 10,
+        "replaces": [],
+        "triggers": [
+            "/bin/*",
+            "/usr/bin/*"
+        ],
+        "origin": "sample",
+        "commit": "994dcb4685405e710a1e599cff82d2e45ec9daae",
+        "builddate": 1671582086,
+        "packager": "Jakub Jirutka <jakub@jirutka.cz>",
+        "size": 696320,
+        "datahash": "4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b"
+    })
+    .to_string();
 
-    println!("{pkg:?}");
+    assert_json_eq!(
+        serde_json::from_str::<PkgInfo>(&pkginfo_json).unwrap(),
+        sample_pkginfo()
+    );
 }
