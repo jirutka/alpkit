@@ -58,11 +58,21 @@ fn constraint_from_str_invalid() {
 #[test]
 #[rustfmt::skip]
 fn dependency_key_value() {
-    for (kv                        , constraint) in vec![
-        (("foo-doc", S!("*"))      , Dependency::new("foo-doc", None)                                           ),
-        (("foo-doc", S!("= 1.2.3")), Dependency::new("foo-doc", Some(Constraint::new(Op::Equal, "1.2.3")))      ),
-        (("foo"    , S!("<= 1.2")) , Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1.2"))) ),
-        (("foo"    , S!("~ 1.2"))  , Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "1.2")))),
+    // This is not expected to ever be used, but test it just in case.
+    let conflict_with_constraint = Dependency {
+        name: S!("foo"),
+        conflict: true,
+        constraint: Some(Constraint::from_str(">1.2.3").unwrap()),
+        repo_pin: None,
+    };
+
+    for (kv                         , constraint) in vec![
+        (("foo-doc", S!("*"))       , Dependency::new("foo-doc", None)                                           ),
+        (("foo-doc", S!("= 1.2.3")) , Dependency::new("foo-doc", Some(Constraint::new(Op::Equal, "1.2.3")))      ),
+        (("foo"    , S!("<= 1.2"))  , Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1.2"))) ),
+        (("foo"    , S!("~ 1.2"))   , Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "1.2")))),
+        (("foo"    , S!("!"))       , Dependency::conflict("foo")                                                ),
+        (("foo"    , S!("!> 1.2.3")), conflict_with_constraint                                                   ),
     ] {
         assert!(constraint.to_key_value() == kv);
         assert!(Dependency::from_key_value(kv.0, kv.1).unwrap() == constraint);

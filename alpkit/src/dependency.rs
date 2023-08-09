@@ -41,6 +41,15 @@ impl Dependency {
             repo_pin: None,
         }
     }
+
+    pub fn conflict<S: ToString>(name: S) -> Self {
+        Dependency {
+            name: name.to_string(),
+            constraint: None,
+            conflict: true,
+            repo_pin: None,
+        }
+    }
 }
 
 impl FromStr for Dependency {
@@ -94,19 +103,15 @@ impl<'a> KeyValueLike<'a> for Dependency {
     type Err = ConstraintParseError;
 
     fn from_key_value(key: Self::Key, value: Self::Value) -> Result<Self, Self::Err> {
-        let (name, conflict) = if let Some(key) = key.strip_prefix('!') {
-            (key.to_owned(), true)
-        } else {
-            (key.to_owned(), false)
-        };
-        let constraint = if value == "*" {
-            None
-        } else {
-            Some(Constraint::from_str(&value)?)
+        let (conflict, constraint) = match value.strip_prefix('!') {
+            Some("") => (true, None),
+            Some(s) => (true, Some(Constraint::from_str(s)?)),
+            None if value == "*" => (false, None),
+            None => (false, Some(Constraint::from_str(&value)?)),
         };
 
         Ok(Dependency {
-            name,
+            name: key.to_owned(),
             constraint,
             conflict,
             repo_pin: None,
@@ -114,12 +119,13 @@ impl<'a> KeyValueLike<'a> for Dependency {
     }
 
     fn to_key_value(&'a self) -> (Self::Key, Self::Value) {
-        (
-            &self.name,
-            self.constraint
-                .as_ref()
-                .map_or("*".to_owned(), |c| format!("{} {}", c.op, c.version)),
-        )
+        let value = match self.constraint.as_ref() {
+            Some(c) if self.conflict => format!("!{} {}", c.op, c.version),
+            Some(c) => format!("{} {}", c.op, c.version),
+            None if self.conflict => "!".to_owned(),
+            None => "*".to_owned(),
+        };
+        (&self.name, value)
     }
 }
 

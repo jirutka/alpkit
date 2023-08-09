@@ -179,7 +179,6 @@ fn test_decode_source_and_sha512sums() {
 }
 
 #[test]
-#[ignore = "FIXME: serialization of Dependency with conflict"]
 fn apkbuild_json() {
     assert_from_to_json!(
         sample_apkbuild(),
@@ -198,7 +197,7 @@ fn apkbuild_json() {
             "license": "ISC and BSD-2-Clause and BSD-3-Clause",
             "depends": {
                 "ruby": ">= 3.0",
-                "!sample-legacy": "*"
+                "sample-legacy": "!"
             },
             "makedepends": {
                 "openssl-dev": "> 3",
