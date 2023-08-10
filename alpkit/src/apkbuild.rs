@@ -134,6 +134,15 @@ pub struct Apkbuild {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_priority: Option<u32>,
 
+    /// The prefix for all providers derived by parsing pkg-config's name or
+    /// `Requires:`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pcprefix: Option<String>,
+
+    /// The prefix for all providers derived by parsing shared objects.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sonameprefix: Option<String>,
+
     /// The packages whose files the APKBUILD's main package is allowed to
     /// overwrite (i.e. both can be installed even if they have conflicting
     /// files).

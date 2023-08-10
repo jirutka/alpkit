@@ -23,6 +23,7 @@ triggers="$pkgname.trigger=/usr/share/sample/*"
 replaces="sample2"
 provides="sample2=$pkgver-r$pkgrel"
 provider_priority=100
+sonameprefix="smpl"
 subpackages="
 	$pkgname-doc
 	$pkgname-dev

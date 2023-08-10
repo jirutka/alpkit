@@ -42,6 +42,8 @@ fn sample_apkbuild() -> Apkbuild {
             dependency("sample2=1.2.3-r2"),
         ],
         provider_priority: Some(100),
+        pcprefix: None,
+        sonameprefix: Some(S!("smpl")),
         replaces: vec![
             dependency("sample2"),
         ],
@@ -215,6 +217,7 @@ fn apkbuild_json() {
                 "sample2": "= 1.2.3-r2"
             },
             "provider_priority": 100,
+            "sonameprefix": "smpl",
             "replaces": {
                 "sample2": "*"
             },
