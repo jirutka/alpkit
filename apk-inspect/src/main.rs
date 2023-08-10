@@ -48,6 +48,12 @@ struct ApkOpts {
 #[derive(Debug, FromArgs)]
 #[argp(subcommand, name = "apkbuild")]
 struct ApkbuildOpts {
+    /// A comma-separated list of CPU architectures (arch) to which the "all"
+    /// and "noarch" keywords are expanded. Default is
+    /// "aarch64,armhf,armv7,ppc64le,riscv64,s390x,x86,x86_64".
+    #[argp(option, arg_name = "arch,")]
+    arch_all: Option<String>,
+
     /// Set given variable(s) in the environment for the APKBUILD evaluation.
     #[argp(
         option,
@@ -126,12 +132,18 @@ fn run(args: AppOpts) -> Result<(), Box<dyn std::error::Error>> {
             dump_json(&pkg, args.pretty_print)?;
         }
         Action::Apkbuild(opts) => {
-            let apkbuild = ApkbuildReader::new()
+            let mut reader = ApkbuildReader::new();
+
+            if let Some(arches) = opts.arch_all {
+                reader.arch_all(&arches.split(',').collect::<Vec<_>>());
+            }
+            reader
                 .envs(opts.env)
                 .inherit_env(opts.keep_env)
                 .shell_cmd(opts.shell)
-                .time_limit(Duration::from_millis(opts.timeout))
-                .read_apkbuild(&opts.file)?;
+                .time_limit(Duration::from_millis(opts.timeout));
+
+            let apkbuild = reader.read_apkbuild(&opts.file)?;
 
             dump_json(&apkbuild, args.pretty_print)?;
         }
