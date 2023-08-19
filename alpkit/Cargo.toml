@@ -27,7 +27,8 @@ bitmask-enum = "2.1"
 field_names = "0.2"
 flate2 = { version = "1.0", default-features = false }
 process_control = { version = "4.0", optional = true }
-serde = { version = "1.0", features = ["derive"] }
+# Due to https://github.com/serde-rs/serde/issues/2538
+serde = { version = "1.0, < 1.0.172", features = ["derive"] }
 tar = { version = "0.4", default-features = false }
 thiserror = "1.0"
 
