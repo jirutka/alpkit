@@ -1,14 +1,17 @@
 use std::fmt::{self, Write};
 use std::str::FromStr;
+use std::{slice, vec};
 
 use bitmask_enum::bitmask;
 #[cfg(feature = "validate")]
 use garde::Validate;
 use mass_cfg_attr::mass_cfg_attr;
-use serde::de::{self, Deserialize};
+use serde::de;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::internal::{key_value_vec_map::KeyValueLike, macros::bail};
+use crate::internal::key_value_vec_map::{self, KeyValueLike};
+use crate::internal::macros::bail;
 #[cfg(feature = "validate")]
 use crate::internal::regex;
 
@@ -148,6 +151,117 @@ impl<'de> Deserialize<'de> for Dependency {
         let s = String::deserialize(deserializer)?;
         Dependency::from_str(&s).map_err(de::Error::custom)
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/// A list of dependencies (or conflicts) on a package or provider.
+#[derive(Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(transparent)]
+#[cfg_attr(feature = "validate", derive(Validate))]
+#[mass_cfg_attr(feature = "validate", garde)]
+pub struct Dependencies(
+    #[garde(dive, custom(validate_duplicate_names))]
+    #[serde(with = "key_value_vec_map")]
+    Vec<Dependency>,
+);
+
+impl Dependencies {
+    /// Parses the given dependencies represented as a strings (see
+    /// [`Dependency::from_str`]) into a new `Dependencies` collection.
+    pub fn parse<'a, I>(values: I) -> Result<Dependencies, ConstraintParseError>
+    where
+        I: IntoIterator<Item = &'a str>,
+    {
+        values.into_iter().map(Dependency::from_str).collect()
+    }
+
+    /// Adds the dependency to this collection.
+    pub fn add(&mut self, dep: Dependency) {
+        self.0.push(dep)
+    }
+
+    /// Returns `true` if the collection contains no dependencies.
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Returns the number of dependencies in the collection.
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Removes a dependency from the collection. Returns whether the dependency
+    /// was present or not.
+    pub fn remove(&mut self, dep: &Dependency) -> bool {
+        let mut found = false;
+
+        self.0.retain(|d| {
+            if d == dep {
+                found = true;
+                false
+            } else {
+                true
+            }
+        });
+        found
+    }
+}
+
+impl From<Vec<Dependency>> for Dependencies {
+    fn from(value: Vec<Dependency>) -> Self {
+        Dependencies(value)
+    }
+}
+
+impl FromIterator<Dependency> for Dependencies {
+    fn from_iter<T: IntoIterator<Item = Dependency>>(iter: T) -> Self {
+        Dependencies(Vec::from_iter(iter))
+    }
+}
+
+impl IntoIterator for Dependencies {
+    type Item = Dependency;
+    type IntoIter = vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Dependencies {
+    type Item = &'a Dependency;
+    type IntoIter = slice::Iter<'a, Dependency>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
+#[cfg(feature = "validate")]
+fn validate_duplicate_names(deps: &Vec<Dependency>, _context: &()) -> garde::Result {
+    use std::collections::HashSet;
+
+    if deps.is_empty() {
+        return Ok(());
+    }
+    let mut names: HashSet<_> = deps.iter().map(|d| d.name.as_str()).collect();
+
+    if deps.len() == names.len() {
+        return Ok(());
+    }
+    let dups = deps.iter().fold(Vec::with_capacity(3), |mut dups, dep| {
+        let name = dep.name.as_str();
+        if !names.remove(name) && !dups.contains(&name) {
+            dups.push(name);
+        }
+        dups
+    });
+
+    Err(garde::Error::new(format!(
+        "has duplicate dependency names: {}",
+        dups.join(", ")
+    )))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

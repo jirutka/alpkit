@@ -1,7 +1,5 @@
 pub(crate) use assert2::{assert, let_assert as assert_let};
 
-use crate::dependency::Dependency;
-
 macro_rules! assert_from_to_json {
     ($strukt:expr, $json:expr $(,)?) => {{
         fn assert<T: ::serde::de::DeserializeOwned + ::serde::ser::Serialize>(
@@ -43,8 +41,3 @@ macro_rules! S {
     };
 }
 pub(crate) use S;
-
-pub(crate) fn dependency(s: &str) -> Dependency {
-    s.parse()
-        .unwrap_or_else(|_| panic!("invalid dependency string: `{s}`"))
-}

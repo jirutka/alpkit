@@ -18,7 +18,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::dependency::Dependency;
+use crate::dependency::Dependencies;
 use crate::internal::exit_status_error::{ExitStatusError, ExitStatusExt};
 use crate::internal::key_value_vec_map::{self, KeyValueLike};
 use crate::internal::macros::bail;
@@ -125,41 +125,35 @@ pub struct Apkbuild {
     /// doesn't include dependencies that are autodiscovered by the `abuild`
     /// tool during the build of the package (e.g. shared object dependencies).
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub depends: Vec<Dependency>,
+    #[serde(default)]
+    pub depends: Dependencies,
 
     /// Build-time dependencies.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub makedepends: Vec<Dependency>,
+    #[serde(default)]
+    pub makedepends: Dependencies,
 
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub makedepends_build: Vec<Dependency>,
+    #[serde(default)]
+    pub makedepends_build: Dependencies,
 
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub makedepends_host: Vec<Dependency>,
+    #[serde(default)]
+    pub makedepends_host: Dependencies,
 
     /// Dependencies that are only required during the check phase (i.e. for
     /// running tests).
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub checkdepends: Vec<Dependency>,
+    #[serde(default)]
+    pub checkdepends: Dependencies,
 
     /// A set of dependencies that, if all installed, induce installation of the
     /// APKBUILD's main package. `install_if` can be used when a package needs
     /// to be installed when some packages are already installed or are in the
     /// dependency tree.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub install_if: Vec<Dependency>,
+    #[serde(default)]
+    pub install_if: Dependencies,
 
     /// System users to be created when building the package(s).
     #[garde(inner(pattern(regex::USER_NAME)))]
@@ -175,9 +169,8 @@ pub struct Apkbuild {
 
     /// Providers (packages) that the APKBUILD's main package provides.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub provides: Vec<Dependency>,
+    #[serde(default)]
+    pub provides: Dependencies,
 
     /// A numeric value which is used by apk-tools to break ties when choosing
     /// a virtual package to satisfy a dependency. Higher values have higher
@@ -202,9 +195,8 @@ pub struct Apkbuild {
     /// overwrite (i.e. both can be installed even if they have conflicting
     /// files).
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub replaces: Vec<Dependency>,
+    #[serde(default)]
+    pub replaces: Dependencies,
 
     /// The priority of the `replaces`. If multiple packages replace files of
     /// each other, then the package with the highest `replaces_priority` wins.

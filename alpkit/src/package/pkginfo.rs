@@ -6,13 +6,10 @@ use schemars::JsonSchema;
 use serde::{self, Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::dependency::Dependency;
-use crate::internal::key_value_vec_map;
+use crate::dependency::Dependencies;
 use crate::internal::macros::bail;
 #[cfg(feature = "validate")]
 use crate::internal::regex;
-#[cfg(feature = "schema-gen")]
-use crate::internal::schema;
 use crate::internal::serde_key_value;
 #[cfg(feature = "validate")]
 use crate::internal::validators::{validate_email, validate_http_url, validate_some_email};
@@ -82,9 +79,8 @@ pub struct PkgInfo {
     /// This also means that the `conflict` field in each [Dependency] is always
     /// `false`.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, alias = "depend", with = "key_value_vec_map")]
-    pub depends: Vec<Dependency>,
+    #[serde(default, alias = "depend")]
+    pub depends: Dependencies,
 
     /// Conflicts of this package, i.e. it cannot be installed if any of the
     /// named packages is installed.
@@ -94,24 +90,21 @@ pub struct PkgInfo {
     /// `depend` field. The `conflict` field in each [Dependency] is always
     /// `false`.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub conflicts: Vec<Dependency>,
+    #[serde(default)]
+    pub conflicts: Dependencies,
 
     /// A set of dependencies that, if all installed, induce installation of
     /// this package. `install_if` can be used when a package needs to be
     /// installed when some packages are already installed or are in the
     /// dependency tree.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub install_if: Vec<Dependency>,
+    #[serde(default)]
+    pub install_if: Dependencies,
 
     /// Providers (packages) that this package provides.
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub provides: Vec<Dependency>,
+    #[serde(default)]
+    pub provides: Dependencies,
 
     /// A numeric value which is used by apk-tools to break ties when choosing
     /// a virtual package to satisfy a dependency. Higher values have higher
@@ -122,9 +115,8 @@ pub struct PkgInfo {
     /// Packages whose files this package is allowed to overwrite (i.e. both can
     /// be installed even if they have conflicting files).
     #[garde(dive)]
-    #[schemars(with = "schema::Dependencies")]
-    #[serde(default, with = "key_value_vec_map")]
-    pub replaces: Vec<Dependency>,
+    #[serde(default)]
+    pub replaces: Dependencies,
 
     /// The priority of the `replaces`. If multiple packages replace files of
     /// each other, then the package with the highest `replaces_priority` wins.

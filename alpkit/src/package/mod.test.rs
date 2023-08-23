@@ -3,7 +3,8 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 use super::*;
-use crate::internal::test_utils::{assert, assert_let, dependency, S};
+use crate::dependency::Dependencies;
+use crate::internal::test_utils::{assert, assert_let, S};
 use fileinfo::FileType;
 
 #[test]
@@ -33,16 +34,12 @@ fn package_load() {
         url: S!("http://www.pizzashack.org/rssh/"),
         arch: S!("x86_64"),
         license: S!("BSD-2-Clause"),
-        depends: vec![
-            dependency("openssh"),
-            dependency("/bin/sh"),
-            dependency("so:libc.musl-x86_64.so.1"),
-        ],
-        conflicts: vec![],
-        install_if: vec![],
-        provides: vec![dependency("cmd:rssh=2.3.4-r3")],
+        depends: Dependencies::parse(["openssh", "/bin/sh", "so:libc.musl-x86_64.so.1"]).unwrap(),
+        conflicts: Dependencies::default(),
+        install_if: Dependencies::default(),
+        provides: Dependencies::parse(["cmd:rssh=2.3.4-r3"]).unwrap(),
         provider_priority: None,
-        replaces: vec![],
+        replaces: Dependencies::default(),
         replaces_priority: None,
         triggers: vec![],
         origin: S!("rssh"),

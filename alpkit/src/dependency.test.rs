@@ -80,27 +80,70 @@ fn dependency_key_value() {
 }
 
 #[test]
+#[rustfmt::skip]
 #[cfg(feature = "validate")]
 fn dependency_validate_valid() {
-    for constraint in vec![
+    let dependencies = vec![
         Dependency::new("foo-doc", None),
         Dependency::new("foo-doc", Some(Constraint::new(Op::Equal, "1.2.3"))),
         Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1.2_rc1"))),
         Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "2.5_beta_pre2-r123"))),
-    ] {
-        assert!(constraint.validate(&()).is_ok());
+    ];
+    for dependency in &dependencies {
+        assert!(dependency.validate(&()).is_ok());
     }
+    assert!(dependencies.validate(&()).is_ok());
 }
 
 #[test]
 #[cfg(feature = "validate")]
 fn dependency_validate_invalid() {
-    for constraint in vec![
+    let dependencies = vec![
         Dependency::new("!foo", None),
         Dependency::new("foo doc", Some(Constraint::new(Op::Equal, "1.2.3"))),
         Dependency::new("foo", Some(Constraint::new(Op::Less | Op::Equal, "1_2_3"))),
         Dependency::new("foo", Some(Constraint::new(Op::Fuzzy | Op::Equal, "a-r0"))),
-    ] {
-        assert!(constraint.validate(&()).is_err());
+    ];
+    for dependency in &dependencies {
+        assert!(dependency.validate(&()).is_err());
     }
+    assert!(dependencies.validate(&()).is_err());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+#[cfg(feature = "validate")]
+fn dependencies_validate_duplicates() {
+    let deps: Dependencies = vec![
+        Dependency::new("foo", None),
+        Dependency::new("bar", None),
+        Dependency::new("baz", Some(Constraint::new(Op::Greater, "1.0"))),
+        Dependency::conflict("foo"),
+        Dependency::new("baz", None),
+    ]
+    .into();
+
+    assert_let!(Err(errors) = deps.validate(&()));
+    assert!(errors
+        .to_string()
+        .ends_with("has duplicate dependency names: foo, baz"));
+}
+
+#[test]
+fn dependencies_collection_methods() {
+    let mut deps = Dependencies::default();
+
+    assert!(deps.len() == 0);
+    assert!(deps.is_empty());
+
+    deps.add(Dependency::new("foo", None));
+    deps.add(Dependency::new("foo", None));
+
+    assert!(deps.len() == 2);
+    assert!(!deps.is_empty());
+
+    deps.remove(&Dependency::new("foo", None));
+
+    assert!(deps.len() == 0);
 }

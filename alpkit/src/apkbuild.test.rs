@@ -2,7 +2,7 @@ use indoc::indoc;
 use serde_json::json;
 
 use super::*;
-use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, dependency, S};
+use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, S};
 
 fn sample_apkbuild() -> Apkbuild {
     Apkbuild {
@@ -22,31 +22,31 @@ fn sample_apkbuild() -> Apkbuild {
             .map(ToString::to_string)
             .collect(),
         license: S!("ISC and BSD-2-Clause and BSD-3-Clause"),
-        depends: vec![
-            dependency("ruby>=3.0"),
-            dependency("!sample-legacy"),
-        ],
-        makedepends: vec![
-            dependency("openssl-dev>3"),
-            dependency("zlib-dev"),
-        ],
-        makedepends_build: vec![],
-        makedepends_host: vec![],
-        checkdepends: vec![
-            dependency("ruby-rspec"),
-        ],
-        install_if: vec![],
+        depends: Dependencies::parse([
+            "ruby>=3.0",
+            "!sample-legacy",
+        ]).unwrap(),
+        makedepends: Dependencies::parse([
+            "openssl-dev>3",
+            "zlib-dev",
+        ]).unwrap(),
+        makedepends_build: Dependencies::default(),
+        makedepends_host: Dependencies::default(),
+        checkdepends: Dependencies::parse([
+            "ruby-rspec",
+        ]).unwrap(),
+        install_if: Dependencies::default(),
         pkgusers: vec![],
         pkggroups: vec![],
-        provides: vec![
-            dependency("sample2=1.2.3-r2"),
-        ],
+        provides: Dependencies::parse([
+            "sample2=1.2.3-r2",
+        ]).unwrap(),
         provider_priority: Some(100),
         pcprefix: None,
         sonameprefix: Some(S!("smpl")),
-        replaces: vec![
-            dependency("sample2"),
-        ],
+        replaces: Dependencies::parse([
+            "sample2",
+        ]).unwrap(),
         replaces_priority: None,
         install: vec![S!("sample.post-install"), S!("sample.post-upgrade")],
         triggers: vec![S!("sample.trigger=/usr/share/sample/*")],
@@ -90,24 +90,24 @@ fn apkbuild_validate_invalid() {
             S!("!riscv64"),
             S!("s390x")
         ],
-        depends: vec![
-            dependency("ruby#>=3.0"),
-            dependency("!!sample-legacy"),
-        ],
-        makedepends: vec![
-            dependency("openssl!dev>3"),
-            dependency("zlib-dev"),
-        ],
-        checkdepends: vec![
-            dependency("ruby&rspec"),
-        ],
-        provides: vec![
-            dependency("sample2=1.2.3-rrr2"),
-        ],
+        depends: Dependencies::parse([
+            "ruby#>=3.0",
+            "!!sample-legacy",
+        ]).unwrap(),
+        makedepends: Dependencies::parse([
+            "openssl!dev>3",
+            "zlib-dev",
+        ]).unwrap(),
+        checkdepends: Dependencies::parse([
+            "ruby&rspec",
+        ]).unwrap(),
+        provides: Dependencies::parse([
+            "sample2=1.2.3-rrr2",
+        ]).unwrap(),
         pcprefix: Some(S!("wrong prefix")),
-        replaces: vec![
-            dependency("sample2?"),
-        ],
+        replaces: Dependencies::parse([
+            "sample2?",
+        ]).unwrap(),
         subpackages: vec![
             S!("sample doc"),
             S!("sample^dev"),

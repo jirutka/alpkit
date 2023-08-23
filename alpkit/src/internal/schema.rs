@@ -4,11 +4,8 @@ use schemars::JsonSchema;
 use serde_json::json;
 
 use crate::apkbuild::Secfix;
-use crate::dependency::Dependency;
+use crate::dependency::Dependencies;
 use crate::internal::regex;
-
-/// This wrapper type is only used for `schemars`.
-pub(crate) struct Dependencies(Vec<Dependency>);
 
 impl JsonSchema for Dependencies {
     fn schema_name() -> String {

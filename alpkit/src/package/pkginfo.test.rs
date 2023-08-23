@@ -2,7 +2,7 @@ use assert_json_diff::assert_json_eq;
 use indoc::indoc;
 use serde_json::json;
 
-use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, dependency, S};
+use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, S};
 
 use super::*;
 
@@ -21,13 +21,10 @@ fn sample_pkginfo() -> PkgInfo {
         maintainer: Some(S!("Jakub Jirutka <jakub@jirutka.cz>")),
         license: S!("ISC and BSD-2-Clause and BSD-3-Clause"),
         triggers: vec![S!("/bin/*"), S!("/usr/bin/*")],
-        depends: vec![
-            dependency("ruby>=3.0"),
-            dependency("so:libc.musl-x86_64.so.1"),
-        ],
-        conflicts: vec![dependency("sample-legacy")],
-        install_if: vec![dependency("sample=1.2.3-r2"), dependency("bar")],
-        provides: vec![dependency("cmd:sample=1.2.3-r2")],
+        depends: Dependencies::parse(["ruby>=3.0", "so:libc.musl-x86_64.so.1"]).unwrap(),
+        conflicts: Dependencies::parse(["sample-legacy"]).unwrap(),
+        install_if: Dependencies::parse(["sample=1.2.3-r2", "bar"]).unwrap(),
+        provides: Dependencies::parse(["cmd:sample=1.2.3-r2"]).unwrap(),
         provider_priority: Some(10),
         datahash: S!("4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b"),
         ..Default::default()
@@ -85,13 +82,10 @@ fn pkginfo_validate_invalid() {
         maintainer: Some(S!("Not an em@il")),
         license: S!("multi\nline"),
         triggers: vec![S!("bin/*"), S!("/usr bin/*")],
-        depends: vec![
-            dependency("ruby#>=3.0"),
-            dependency("so:libc.musl-x86_64.$o.1"),
-        ],
-        conflicts: vec![dependency("sample-legacy!")],
-        install_if: vec![dependency("sample=1.2.3-alpha"), dependency("-")],
-        provides: vec![dependency("cmd:sample*=1.2.3-r2")],
+        depends: Dependencies::parse(["ruby#>=3.0", "so:libc.musl-x86_64.$o.1"]).unwrap(),
+        conflicts: Dependencies::parse(["sample-legacy!"]).unwrap(),
+        install_if: Dependencies::parse(["sample=1.2.3-alpha", "-"]).unwrap(),
+        provides: Dependencies::parse(["cmd:sample*=1.2.3-r2"]).unwrap(),
         provider_priority: Some(10),
         packager: S!("Not an em@il"),
         datahash: S!("123"),
