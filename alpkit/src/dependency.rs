@@ -12,6 +12,8 @@ use thiserror::Error;
 
 use crate::internal::key_value_vec_map::{self, KeyValueLike};
 use crate::internal::macros::bail;
+#[cfg(feature = "schema-gen")]
+use crate::internal::macros::define_schema_for;
 #[cfg(feature = "validate")]
 use crate::internal::regex;
 
@@ -263,6 +265,60 @@ fn validate_duplicate_names(deps: &Vec<Dependency>, _context: &()) -> garde::Res
         dups.join(", ")
     )))
 }
+
+#[cfg(feature = "schema-gen")]
+define_schema_for!(Dependencies, {
+    "anyOf": [{
+        "type": "object",
+        "description": "A map of package (or provider) names and their version constraint.",
+        "examples": [
+            {
+                "rust": "*",
+                "so:libX11.so.6": "!",
+                "cmd:rust": ">= 1.71_rc1-r1",
+                "nginx": "!< 1.24",
+            },
+        ],
+        "additionalProperties": false,
+        "patternProperties": {
+            &regex::PROVIDER.to_string(): {
+                "type": "string",
+                "title": "Version constraint",
+                "description": "The value can be one of:\n\
+                    - `*` - any version\n\
+                    - `!` - conflict (negative dependency)\n\
+                    - `<operator> <version>` - version constraint\n\
+                    - `!<operator> <version>` - conflict with version constraint (shouldn't be used)\
+                    \n\n\
+                    Syntax: `(* | ! | [!]<operator> <version>)`",
+                "examples": [
+                    "*",
+                    "!",
+                    ">= 1.71_rc1-r1",
+                    "!< 1.2",
+                ],
+                "pattern": &regex::DEP_CONSTRAINT.to_string(),
+            },
+        },
+    }, {
+        "type": "array",
+        "items": {
+            "type": "string",
+            "description": "A package (or provider) name with an optional version constraint in \
+                the same format as in APKBUILD. An exclamation mark (`!`) at the beginning \
+                indicates a negative dependency (conflict).\
+                \n\n\
+                Syntax: `[!]<name>[<operator>[<version>]]`",
+            "examples": [
+                "rust",
+                "!so:libX11.so.6",
+                "cmd:rust>=1.71_rc1-r1",
+                "!nginx<1.24",
+            ],
+            "pattern": &regex::PROVIDER_WITH_CONSTRAINT.to_string(),
+        },
+    }]
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 

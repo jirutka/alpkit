@@ -22,10 +22,10 @@ use crate::dependency::Dependencies;
 use crate::internal::exit_status_error::{ExitStatusError, ExitStatusExt};
 use crate::internal::key_value_vec_map::{self, KeyValueLike};
 use crate::internal::macros::bail;
+#[cfg(feature = "schema-gen")]
+use crate::internal::macros::define_schema_for;
 #[cfg(feature = "validate")]
 use crate::internal::regex;
-#[cfg(feature = "schema-gen")]
-use crate::internal::schema;
 use crate::internal::serde_key_value;
 use crate::internal::std_ext::{ChunksExactIterator, Tap};
 #[cfg(feature = "validate")]
@@ -231,7 +231,7 @@ pub struct Apkbuild {
     /// of the APKBUILD's package(s).
     #[field_names(skip)] // parsed from comments
     #[garde(dive)]
-    #[schemars(with = "schema::Secfixes")]
+    #[schemars(with = "Secfixes")]
     #[serde(default, with = "key_value_vec_map")]
     pub secfixes: Vec<Secfix>,
 }
@@ -314,6 +314,40 @@ impl<'a> KeyValueLike<'a> for Secfix {
         (&self.version, self.fixes.clone())
     }
 }
+
+/// This wrapper type is only used for `schemars`.
+#[cfg(feature = "schema-gen")]
+struct Secfixes(Vec<Secfix>);
+
+#[cfg(feature = "schema-gen")]
+define_schema_for!(Secfixes, {
+    "type": "object",
+    "title": "Security fixes",
+    "description": "A map of known security vulnerabilities (typically CVEs) fixed in \
+        each version of the package. The key is a full version (including the `-r') of \
+        the package, and the value is a list of the vulnerability IDs that have been \
+        fixed in that version. The special key \"0\" groups together vulnerability IDs \
+        that were issued for the upstream but never affected the package.",
+    "examples": [
+        {
+            "1.1.1l-r0": ["CVE-2021-3711", "CVE-2021-3712"],
+            "0": ["CVE-2022-1292", "CVE-2022-2068"],
+        },
+    ],
+    "additionalProperties": false,
+    "patternProperties": {
+        &regex::PKGVER_REL_OR_ZERO.to_string(): {
+            "type": "array",
+            "items": {
+                "title": "Vulnerability ID",
+                "examples": [
+                    "CVE-2021-3711",
+                ],
+                "type": "string",
+            },
+        },
+    },
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 
