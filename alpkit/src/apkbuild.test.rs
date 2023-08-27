@@ -4,7 +4,7 @@ use serde_json::json;
 use super::*;
 use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, S};
 
-fn sample_apkbuild() -> Apkbuild {
+fn valid_apkbuild() -> Apkbuild {
     Apkbuild {
         maintainer: Some(S!("Jakub Jirutka <jakub@jirutka.cz>")),
         contributors: vec![
@@ -67,16 +67,8 @@ fn sample_apkbuild() -> Apkbuild {
     }
 }
 
-#[test]
-#[cfg(feature = "validate")]
-fn apkbuild_validate_valid() {
-    assert!(sample_apkbuild().validate(&()).is_ok())
-}
-
-#[test]
-#[cfg(feature = "validate")]
-fn apkbuild_validate_invalid() {
-    let apkbuild = Apkbuild {
+fn invalid_apkbuild() -> Apkbuild {
+    Apkbuild {
         maintainer: Some(S!("Invalid em@il")),
         contributors: vec![
             S!("invalid@form.at"),
@@ -122,16 +114,26 @@ fn apkbuild_validate_invalid() {
             Secfix::new("1.2.0-ra", vec![S!("CVE-2021-12345")]),
         ],
         ..Default::default()
-    };
+    }
+}
 
-    assert_let!(Err(e) = apkbuild.validate(&()));
+#[test]
+#[cfg(feature = "validate")]
+fn apkbuild_validate_valid() {
+    assert!(valid_apkbuild().validate(&()).is_ok())
+}
+
+#[test]
+#[cfg(feature = "validate")]
+fn apkbuild_validate_invalid() {
+    assert_let!(Err(e) = invalid_apkbuild().validate(&()));
     assert!(e.flatten().len() == 24);
 }
 
 #[test]
 fn read_apkbuild() {
     let fixture = Path::new("../fixtures/aports/sample/APKBUILD");
-    assert!(ApkbuildReader::new().read_apkbuild(fixture).unwrap() == sample_apkbuild());
+    assert!(ApkbuildReader::new().read_apkbuild(fixture).unwrap() == valid_apkbuild());
 }
 
 #[test]
@@ -244,7 +246,7 @@ fn test_decode_source_and_sha512sums() {
 #[test]
 fn apkbuild_json() {
     assert_from_to_json!(
-        sample_apkbuild(),
+        valid_apkbuild(),
         json!({
             "maintainer": "Jakub Jirutka <jakub@jirutka.cz>",
             "contributors": [

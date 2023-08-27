@@ -6,7 +6,7 @@ use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, S};
 
 use super::*;
 
-fn sample_pkginfo() -> PkgInfo {
+fn valid_pkginfo() -> PkgInfo {
     PkgInfo {
         pkgname: S!("sample"),
         pkgver: S!("1.2.3-r2"),
@@ -27,6 +27,29 @@ fn sample_pkginfo() -> PkgInfo {
         provides: Dependencies::parse(["cmd:sample=1.2.3-r2"]).unwrap(),
         provider_priority: Some(10),
         datahash: S!("4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b"),
+        ..Default::default()
+    }
+}
+
+fn invalid_pkginfo() -> PkgInfo {
+    PkgInfo {
+        pkgname: S!("samp/le"),
+        pkgver: S!("1-2_3-r2"),
+        pkgdesc: S!("A sample aport\nfor testing"),
+        url: S!("ftp://example.org/sample"),
+        arch: S!("AArch64"),
+        origin: S!("sampl*"),
+        commit: Some(S!("123")),
+        maintainer: Some(S!("Not an em@il")),
+        license: S!("multi\nline"),
+        triggers: vec![S!("bin/*"), S!("/usr bin/*")],
+        depends: Dependencies::parse(["ruby#>=3.0", "so:libc.musl-x86_64.$o.1"]).unwrap(),
+        conflicts: Dependencies::parse(["sample-legacy!"]).unwrap(),
+        install_if: Dependencies::parse(["sample=1.2.3-alpha", "-"]).unwrap(),
+        provides: Dependencies::parse(["cmd:sample*=1.2.3-r2"]).unwrap(),
+        provider_priority: Some(10),
+        packager: S!("Not an em@il"),
+        datahash: S!("123"),
         ..Default::default()
     }
 }
@@ -59,40 +82,19 @@ fn pkginfo_parse() {
         depend = so:libc.musl-x86_64.so.1
         datahash = 4c36284c04dd1e18e4df59b4bc873fd89b6240861b925cac59341cc66e36d94b
     "};
-    assert!(PkgInfo::parse(input).unwrap() == sample_pkginfo());
+    assert!(PkgInfo::parse(input).unwrap() == valid_pkginfo());
 }
 
 #[test]
 #[cfg(feature = "validate")]
 fn pkginfo_validate_valid() {
-    assert!(sample_pkginfo().validate(&()).is_ok());
+    assert!(valid_pkginfo().validate(&()).is_ok());
 }
 
 #[test]
 #[cfg(feature = "validate")]
 fn pkginfo_validate_invalid() {
-    let pkginfo = PkgInfo {
-        pkgname: S!("samp/le"),
-        pkgver: S!("1-2_3-r2"),
-        pkgdesc: S!("A sample aport\nfor testing"),
-        url: S!("ftp://example.org/sample"),
-        arch: S!("AArch64"),
-        origin: S!("sampl*"),
-        commit: Some(S!("123")),
-        maintainer: Some(S!("Not an em@il")),
-        license: S!("multi\nline"),
-        triggers: vec![S!("bin/*"), S!("/usr bin/*")],
-        depends: Dependencies::parse(["ruby#>=3.0", "so:libc.musl-x86_64.$o.1"]).unwrap(),
-        conflicts: Dependencies::parse(["sample-legacy!"]).unwrap(),
-        install_if: Dependencies::parse(["sample=1.2.3-alpha", "-"]).unwrap(),
-        provides: Dependencies::parse(["cmd:sample*=1.2.3-r2"]).unwrap(),
-        provider_priority: Some(10),
-        packager: S!("Not an em@il"),
-        datahash: S!("123"),
-        ..Default::default()
-    };
-
-    assert_let!(Err(e) = pkginfo.validate(&()));
+    assert_let!(Err(e) = invalid_pkginfo().validate(&()));
     assert!(e.flatten().len() == 18);
 }
 
@@ -118,7 +120,7 @@ fn parse_key_value_with_missing_equals() {
 #[test]
 fn pkginfo_json() {
     assert_from_to_json!(
-        sample_pkginfo(),
+        valid_pkginfo(),
         json!({
             "maintainer": "Jakub Jirutka <jakub@jirutka.cz>",
             "pkgname": "sample",
@@ -198,6 +200,6 @@ fn pkginfo_json_with_dependency_arrays() {
 
     assert_json_eq!(
         serde_json::from_str::<PkgInfo>(&pkginfo_json).unwrap(),
-        sample_pkginfo()
+        valid_pkginfo()
     );
 }
