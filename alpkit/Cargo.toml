@@ -13,7 +13,7 @@ rust-version = "1.65"  # Alpine 3.18+
 [features]
 default = ["flate2-rust"]
 # Add support for generating JSON schema.
-schema-gen = ["validate", "dep:schemars"]
+schema-gen = ["validate", "dep:schemars", "dep:serde_json"]
 # Add support for setting timeout for the APKBUILD interpretation.
 shell-timeout = ["dep:process_control"]
 # Add support for validation using the garde crate.
@@ -37,6 +37,7 @@ process_control = { version = "4.0", optional = true }
 regex-lite = { version = "0.1", optional = true }
 # Due to https://github.com/serde-rs/serde/issues/2538
 serde = { version = "1.0, < 1.0.172", features = ["derive"] }
+serde_json = { version = "1.0", optional = true }
 schemars = { git = "https://github.com/jirutka/schemars.git", branch = "vec-of-str-num-validation", features = ["derive"], optional = true }
 tar = { version = "0.4", default-features = false }
 thiserror = "1.0"
