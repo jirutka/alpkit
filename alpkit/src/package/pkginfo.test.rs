@@ -3,6 +3,10 @@ use indoc::indoc;
 use serde_json::json;
 
 use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, S};
+#[cfg(feature = "schema-gen")]
+use crate::internal::test_utils::{
+    assert_schema_invalid, assert_schema_valid, compile_json_schema,
+};
 
 use super::*;
 
@@ -96,6 +100,20 @@ fn pkginfo_validate_valid() {
 fn pkginfo_validate_invalid() {
     assert_let!(Err(e) = invalid_pkginfo().validate(&()));
     assert!(e.flatten().len() == 18);
+}
+
+#[test]
+#[cfg(feature = "schema-gen")]
+fn pkginfo_schema_validate_valid() {
+    let schema = compile_json_schema::<PkgInfo>();
+    assert_schema_valid!(valid_pkginfo(), schema);
+}
+
+#[test]
+#[cfg(feature = "schema-gen")]
+fn pkginfo_schema_validate_invalid() {
+    let schema = compile_json_schema::<PkgInfo>();
+    assert_schema_invalid!(invalid_pkginfo(), schema, errors_count = 14);
 }
 
 #[test]

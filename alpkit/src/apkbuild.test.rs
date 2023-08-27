@@ -3,6 +3,10 @@ use serde_json::json;
 
 use super::*;
 use crate::internal::test_utils::{assert, assert_from_to_json, assert_let, S};
+#[cfg(feature = "schema-gen")]
+use crate::internal::test_utils::{
+    assert_schema_invalid, assert_schema_valid, compile_json_schema,
+};
 
 fn valid_apkbuild() -> Apkbuild {
     Apkbuild {
@@ -128,6 +132,20 @@ fn apkbuild_validate_valid() {
 fn apkbuild_validate_invalid() {
     assert_let!(Err(e) = invalid_apkbuild().validate(&()));
     assert!(e.flatten().len() == 24);
+}
+
+#[test]
+#[cfg(feature = "schema-gen")]
+fn apkbuild_schema_validate_valid() {
+    let schema = compile_json_schema::<Apkbuild>();
+    assert_schema_valid!(valid_apkbuild(), schema);
+}
+
+#[test]
+#[cfg(feature = "schema-gen")]
+fn apkbuild_schema_validate_invalid() {
+    let schema = compile_json_schema::<Apkbuild>();
+    assert_schema_invalid!(invalid_apkbuild(), schema, errors_count = 17);
 }
 
 #[test]
