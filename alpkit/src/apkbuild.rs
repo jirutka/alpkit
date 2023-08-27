@@ -289,11 +289,13 @@ impl Source {
 #[cfg_attr(feature = "validate", derive(Validate))]
 #[mass_cfg_attr(feature = "validate", garde)]
 pub struct Secfix {
-    /// A full version of the package that _fixes_ the vulnerabilities.
+    /// A full version of the package that _fixes_ the vulnerabilities, or `0`
+    /// for the vulnerabilities that were issued for the upstream but never
+    /// affected the package.
     #[garde(pattern(regex::PKGVER_REL_OR_ZERO))]
     pub version: String,
 
-    /// A set of CVE identifiers.
+    /// A set of vulnerability IDs (typically CVE).
     #[garde(skip)] // FIXME
     pub fixes: Vec<String>,
 }
