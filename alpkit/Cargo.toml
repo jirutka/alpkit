@@ -8,7 +8,7 @@ license = "MIT"
 keywords = ["alpine", "alpine-linux", "apk", "apk-tools"]
 
 edition = "2021"
-rust-version = "1.64"  # Alpine 3.17+
+rust-version = "1.65"  # Alpine 3.18+
 
 [features]
 default = ["flate2-rust"]
@@ -40,7 +40,7 @@ thiserror = "1.0"
 
 [dev-dependencies]
 assert-json-diff = "2.0"
-assert2 = "=0.3.6"  # blocked by MSRV
+assert2 = "0.3"
 indoc = "1.0"
 serde_json = "1.0"
 

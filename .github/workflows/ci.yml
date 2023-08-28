@@ -33,7 +33,7 @@ jobs:
         include:
           - { target: x86_64-unknown-linux-musl }
           - { target: x86_64-unknown-linux-musl, rust: nightly }
-          - { target: x86_64-unknown-linux-musl, rust: '1.64' }  # MSRV
+          - { target: x86_64-unknown-linux-musl, rust: '1.65' }  # MSRV
           - { target: x86_64-unknown-linux-gnu }
           - { target: x86_64-apple-darwin, os: macos-latest }
           - { target: aarch64-unknown-linux-musl }

@@ -3,7 +3,7 @@
 :gh-name: jirutka/{proj-name}
 :version: 0.1.0-pre.2
 :releases-uri: https://github.com/{gh-name}/releases/download/v{version}
-:msrv: 1.64
+:msrv: 1.65
 
 ifdef::env-github[]
 image:https://img.shields.io/crates/v/{proj-name}.svg[Version on crates.io, link=https://crates.io/crates/{proj-name}]
